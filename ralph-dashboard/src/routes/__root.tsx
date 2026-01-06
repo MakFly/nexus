@@ -8,7 +8,6 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import appCss from '../styles.css?url'
-import { useRalphSSEInit } from '@/stores/ralph-store'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -47,8 +46,6 @@ function NotFound() {
 }
 
 function RootComponent() {
-  // Initialize SSE connection once globally
-  useRalphSSEInit()
   return <Outlet />
 }
 

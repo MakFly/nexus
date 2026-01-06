@@ -3,23 +3,17 @@
 import * as React from 'react'
 import {
   AlertCircle,
-  Check,
   CheckCircle2,
   Clock,
   Database,
-  FileCode,
+  FileText,
   Filter,
-  Folder,
-  Lightbulb,
-  Loader2,
   Search,
-  Star,
-  StarOff,
   Tag,
-  Trash2,
 } from 'lucide-react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { AppLayout } from '@/components/layout/app-layout'
+import { useRalphFiles } from '@/hooks/use-ralph-files'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -38,298 +32,122 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 import { MemoriesSkeleton } from '@/components/skeletons/memories-skeleton'
 
-// Toast notification component
-function Toast({
-  message,
-  type = 'success',
-  onClose,
-}: {
-  message: string
-  type?: 'success' | 'error'
-  onClose: () => void
-}) {
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose()
-    }, 2000)
-    return () => clearTimeout(timer)
-  }, [onClose])
-
-  return (
-    <div
-      className={cn(
-        'fixed bottom-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm',
-        'animate-in slide-in-from-bottom-2 fade-in duration-300',
-        type === 'success'
-          ? 'bg-emerald-500 text-white'
-          : 'bg-rose-500 text-white',
-      )}
-    >
-      {type === 'success' ? (
-        <Check className="w-4 h-4" />
-      ) : (
-        <AlertCircle className="w-4 h-4" />
-      )}
-      <span className="font-medium">{message}</span>
-    </div>
-  )
-}
-
-const RALPH_API = import.meta.env.VITE_RALPH_API_URL || ''
-
-// Memory interface matching the backend
-interface Memory {
-  id: string
-  sessionId: string
-  content: string
-  category: string
-  priority: string
-  metadata?: Record<string, unknown>
-  createdAt: string
-  accessCount: number
-  lastAccessedAt?: string
-}
-
-interface Session {
-  id: string
-  taskDescription: string
-  status: string
-  createdAt: string
-}
-
-const categoryConfig = {
-  decision: {
-    icon: Lightbulb,
-    color: 'text-violet-500',
-    bg: 'bg-violet-500/10',
-    label: 'Decision',
+// Category configuration with colors
+const categoryConfig: Record<
+  string,
+  { icon: any; color: string; bg: string; label: string }
+> = {
+  backend: {
+    icon: Database,
+    color: 'text-blue-500',
+    bg: 'bg-blue-500/10',
+    label: 'Backend',
   },
-  action: {
+  testing: {
     icon: CheckCircle2,
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-500/10',
-    label: 'Action',
+    color: 'text-green-500',
+    bg: 'bg-green-500/10',
+    label: 'Testing',
   },
-  error: {
-    icon: AlertCircle,
-    color: 'text-rose-500',
-    bg: 'bg-rose-500/10',
-    label: 'Error',
+  docs: {
+    icon: FileText,
+    color: 'text-yellow-500',
+    bg: 'bg-yellow-500/10',
+    label: 'Docs',
   },
-  progress: {
-    icon: FileCode,
+  refactor: {
+    icon: Tag,
+    color: 'text-purple-500',
+    bg: 'bg-purple-500/10',
+    label: 'Refactor',
+  },
+  implementation: {
+    icon: CheckCircle2,
     color: 'text-cyan-500',
     bg: 'bg-cyan-500/10',
-    label: 'Progress',
+    label: 'Implementation',
   },
-  context: {
-    icon: Database,
-    color: 'text-amber-500',
-    bg: 'bg-amber-500/10',
-    label: 'Context',
+  auth: {
+    icon: AlertCircle,
+    color: 'text-red-500',
+    bg: 'bg-red-500/10',
+    label: 'Auth',
   },
-  other: {
+  config: {
     icon: Tag,
     color: 'text-gray-500',
     bg: 'bg-gray-500/10',
-    label: 'Other',
+    label: 'Config',
   },
 }
 
 function MemoryCard({
   memory,
-  sessions,
-  onStar,
-  onDelete,
+  formatRelativeTime,
 }: {
-  memory: Memory
-  sessions: Array<Session>
-  onStar: (id: string, current: boolean) => void
-  onDelete: (id: string) => void
+  memory: any
+  formatRelativeTime: (timestamp: string) => string
 }) {
-  const config =
-    categoryConfig[memory.category as keyof typeof categoryConfig] ||
-    categoryConfig.other
+  const config = categoryConfig[memory.category] || categoryConfig.config
   const Icon = config.icon
-  const [starred, setStarred] = React.useState(memory.priority === 'high')
-
-  const handleStar = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const newState = !starred
-    setStarred(newState)
-    onStar(memory.id, newState)
-  }
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    onDelete(memory.id)
-  }
 
   return (
-    <Button
-      asChild
-      variant="ghost"
-      className={cn(
-        'w-full justify-start h-auto p-4 rounded-xl transition-all hover:shadow-md hover:scale-[1.01]',
-        config.bg,
-        'border-0 cursor-pointer',
-      )}
-    >
-      <Link
-        to="/memories/$id"
-        params={{ id: memory.id }}
-        className="cursor-pointer"
+    <Link to="/" className="block">
+      <div
+        className={cn(
+          'p-4 rounded-xl border transition-all hover:shadow-md hover:scale-[1.01]',
+          config.bg,
+        )}
       >
-        <div className="flex items-start gap-3 w-full">
+        <div className="flex items-start gap-3">
           <div className={cn('p-2 rounded-lg', config.bg)}>
             <Icon className={cn('w-4 h-4', config.color)} />
           </div>
           <div className="flex-1 min-w-0 space-y-2">
-            <p className="text-sm leading-relaxed">{memory.content}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-medium">{memory.content}</span>
+              {memory.file_path && (
+                <code className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
+                  {memory.file_path}
+                </code>
+              )}
+            </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className={cn('text-xs', config.color)}>
                 {config.label}
               </Badge>
-              <Badge variant="outline" className="text-xs gap-1">
-                <Folder className="w-3 h-3" />
-                {sessions
-                  .find((s) => s.id === memory.sessionId)
-                  ?.taskDescription?.slice(0, 30) ||
-                  memory.sessionId.slice(0, 8)}
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-xs',
+                  memory.priority === 'high'
+                    ? 'text-amber-500 border-amber-500/20'
+                    : 'text-muted-foreground',
+                )}
+              >
+                {memory.priority}
               </Badge>
               <span className="text-xs text-muted-foreground flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {new Date(memory.createdAt).toLocaleString()}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {memory.accessCount} accesses
+                {formatRelativeTime(memory.timestamp)}
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hover:bg-amber-500/10 cursor-pointer"
-              onClick={handleStar}
-            >
-              {starred ? (
-                <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              ) : (
-                <StarOff className="w-4 h-4 text-muted-foreground" />
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer"
-              onClick={handleDelete}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
         </div>
-      </Link>
-    </Button>
+      </div>
+    </Link>
   )
 }
 
 export function MemoriesPage() {
-  const navigate = useNavigate()
+  const { memories, categoryCounts, formatRelativeTime, isLoading, error } =
+    useRalphFiles()
+
   const [search, setSearch] = React.useState('')
   const [categoryFilter, setCategoryFilter] = React.useState('all')
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [memories, setMemories] = React.useState<Array<Memory>>([])
-  const [sessions, setSessions] = React.useState<Array<Session>>([])
-  const [error, setError] = React.useState<string | null>(null)
-  const [toast, setToast] = React.useState<{
-    message: string
-    type: 'success' | 'error'
-  } | null>(null)
-  const [deleteId, setDeleteId] = React.useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = React.useState(false)
-
-  React.useEffect(() => {
-    const fetchMemories = async () => {
-      try {
-        const res = await fetch(`${RALPH_API}/api/memories`)
-        if (!res.ok) throw new Error('Failed to fetch memories')
-        const data = await res.json()
-        setMemories(data.memories || [])
-        setSessions(data.sessions || [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchMemories()
-  }, [])
-
-  const showToast = (
-    message: string,
-    type: 'success' | 'error' = 'success',
-  ) => {
-    setToast({ message, type })
-  }
-
-  const handleStar = async (id: string, isStarred: boolean) => {
-    try {
-      const res = await fetch(`${RALPH_API}/api/memories/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priority: isStarred ? 'high' : 'normal' }),
-      })
-      if (!res.ok) throw new Error('Failed to update memory')
-      setMemories(
-        memories.map((m) =>
-          m.id === id ? { ...m, priority: isStarred ? 'high' : 'normal' } : m,
-        ),
-      )
-      showToast(isStarred ? 'Added to starred' : 'Removed from starred')
-    } catch (err) {
-      showToast(
-        err instanceof Error ? err.message : 'Failed to update',
-        'error',
-      )
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!deleteId) return
-    setIsDeleting(true)
-    try {
-      const res = await fetch(`${RALPH_API}/api/memories/${deleteId}`, {
-        method: 'DELETE',
-      })
-      if (!res.ok) throw new Error('Failed to delete memory')
-      setMemories(memories.filter((m) => m.id !== deleteId))
-      setDeleteId(null)
-      showToast('Memory deleted')
-    } catch (err) {
-      showToast(
-        err instanceof Error ? err.message : 'Failed to delete',
-        'error',
-      )
-    } finally {
-      setIsDeleting(false)
-    }
-  }
 
   if (isLoading) {
     return <MemoriesSkeleton />
@@ -349,71 +167,31 @@ export function MemoriesPage() {
     )
   }
 
+  // Get unique categories from memories
+  const categories = Array.from(new Set(memories.map((m) => m.category))).sort()
+
   const filteredMemories = memories.filter((m) => {
-    const sessionTask =
-      sessions.find((s) => s.id === m.sessionId)?.taskDescription || ''
     const matchesSearch =
       m.content.toLowerCase().includes(search.toLowerCase()) ||
-      sessionTask.toLowerCase().includes(search.toLowerCase())
+      (m.file_path || '').toLowerCase().includes(search.toLowerCase())
     const matchesCategory =
       categoryFilter === 'all' || m.category === categoryFilter
     return matchesSearch && matchesCategory
   })
 
+  // Calculate stats
   const stats = {
     total: memories.length,
-    decisions: memories.filter((m) => m.category === 'decision').length,
-    actions: memories.filter((m) => m.category === 'action').length,
-    errors: memories.filter((m) => m.category === 'error').length,
+    backend: categoryCounts.backend || 0,
+    testing: categoryCounts.testing || 0,
+    other:
+      memories.length -
+      (categoryCounts.backend || 0) -
+      (categoryCounts.testing || 0),
   }
 
   return (
     <AppLayout title="Memories">
-      {/* Toast notification */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-
-      {/* Delete confirmation dialog */}
-      <AlertDialog
-        open={deleteId !== null}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Memory</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this memory? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-rose-500 hover:bg-rose-600"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <div className="flex flex-col gap-6 p-4 lg:p-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -432,42 +210,42 @@ export function MemoriesPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-violet-500/5 to-purple-500/5 border-violet-500/20">
+          <Card className="bg-gradient-to-br from-blue-500/5 to-cyan-500/5 border-blue-500/20">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Decisions</p>
-                  <p className="text-2xl font-bold font-mono text-violet-500">
-                    {stats.decisions}
+                  <p className="text-sm text-muted-foreground">Backend</p>
+                  <p className="text-2xl font-bold font-mono text-blue-500">
+                    {stats.backend}
                   </p>
                 </div>
-                <Lightbulb className="w-8 h-8 text-violet-500/50" />
+                <Database className="w-8 h-8 text-blue-500/50" />
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-emerald-500/5 to-green-500/5 border-emerald-500/20">
+          <Card className="bg-gradient-to-br from-green-500/5 to-emerald-500/5 border-green-500/20">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Actions</p>
-                  <p className="text-2xl font-bold font-mono text-emerald-500">
-                    {stats.actions}
+                  <p className="text-sm text-muted-foreground">Testing</p>
+                  <p className="text-2xl font-bold font-mono text-green-500">
+                    {stats.testing}
                   </p>
                 </div>
-                <CheckCircle2 className="w-8 h-8 text-emerald-500/50" />
+                <CheckCircle2 className="w-8 h-8 text-green-500/50" />
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-rose-500/5 to-red-500/5 border-rose-500/20">
+          <Card className="bg-gradient-to-br from-gray-500/5 to-slate-500/5 border-gray-500/20">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Errors Fixed</p>
-                  <p className="text-2xl font-bold font-mono text-rose-500">
-                    {stats.errors}
+                  <p className="text-sm text-muted-foreground">Other</p>
+                  <p className="text-2xl font-bold font-mono text-gray-500">
+                    {stats.other}
                   </p>
                 </div>
-                <AlertCircle className="w-8 h-8 text-rose-500/50" />
+                <Tag className="w-8 h-8 text-gray-500/50" />
               </div>
             </CardContent>
           </Card>
@@ -480,7 +258,7 @@ export function MemoriesPage() {
               <div>
                 <CardTitle className="font-mono">Memory Bank</CardTitle>
                 <CardDescription>
-                  Stored decisions, actions, and context from all sessions
+                  Auto-captured context from your coding sessions
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
@@ -503,11 +281,11 @@ export function MemoriesPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="decision">Decisions</SelectItem>
-                    <SelectItem value="action">Actions</SelectItem>
-                    <SelectItem value="error">Errors</SelectItem>
-                    <SelectItem value="progress">Progress</SelectItem>
-                    <SelectItem value="context">Context</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -521,17 +299,17 @@ export function MemoriesPage() {
                     <Database className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p className="font-mono">No memories found</p>
                     <p className="text-xs mt-1">
-                      Memories are stored when working with Ralph MCP
+                      {search || categoryFilter !== 'all'
+                        ? 'Try adjusting your filters'
+                        : 'Start coding to see automatic context capture'}
                     </p>
                   </div>
                 ) : (
-                  filteredMemories.map((memory) => (
+                  filteredMemories.map((memory, index) => (
                     <MemoryCard
-                      key={memory.id}
+                      key={`${memory.timestamp}-${index}`}
                       memory={memory}
-                      sessions={sessions}
-                      onStar={handleStar}
-                      onDelete={setDeleteId}
+                      formatRelativeTime={formatRelativeTime}
                     />
                   ))
                 )}
@@ -539,6 +317,33 @@ export function MemoriesPage() {
             </ScrollArea>
           </CardContent>
         </Card>
+
+        {/* Category breakdown */}
+        {Object.keys(categoryCounts).length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-mono">
+                Category Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(categoryCounts).map(([cat, count]) => {
+                  const config = categoryConfig[cat] || categoryConfig.config
+                  return (
+                    <Badge
+                      key={cat}
+                      variant="outline"
+                      className={cn('px-3 py-1', config.color)}
+                    >
+                      {cat}: {count}
+                    </Badge>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AppLayout>
   )

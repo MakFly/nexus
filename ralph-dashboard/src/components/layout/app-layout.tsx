@@ -4,17 +4,10 @@ import * as React from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 import {
   Activity,
-  Archive,
-  BarChart3,
   Bell,
-  BookOpen,
   Brain,
-  ChevronDown,
   Database,
-  FolderOpen,
   GitBranch,
-  HelpCircle,
-  History,
   LayoutDashboard,
   LogOut,
   MoreVertical,
@@ -66,32 +59,12 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const navMain = [
     { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-    { title: 'Guide', url: '/guide', icon: BookOpen },
-    { title: 'Multi-Agent', url: '/multi-agent', icon: GitBranch },
-    { title: 'Projects', url: '/projects', icon: FolderOpen },
-    { title: 'Playground', url: '/playground', icon: Activity },
     { title: 'Memories', url: '/memories', icon: Database },
-    { title: 'Checkpoints', url: '/checkpoints', icon: Archive },
-    { title: 'Metrics', url: '/metrics', icon: BarChart3 },
-    { title: 'Changelog', url: '/changelog', icon: History },
+    { title: 'MCP Tools', url: '/mcp', icon: Zap },
+    { title: 'Multi-Agent', url: '/multi-agent', icon: GitBranch },
   ]
 
-  const docSections = [
-    {
-      title: 'Reference',
-      items: [
-        { title: 'API Reference', url: '/docs/api/rest' },
-        { title: 'SSE Events', url: '/docs/api/sse' },
-        { title: 'Architecture', url: '/docs/advanced/architecture' },
-        { title: 'Troubleshooting', url: '/docs/advanced/troubleshooting' },
-      ],
-    },
-  ]
-
-  const navSecondary = [
-    { title: 'Settings', url: '/settings', icon: Settings },
-    { title: 'Help', url: '/help', icon: HelpCircle },
-  ]
+  const navSecondary = [{ title: 'Settings', url: '/settings', icon: Settings }]
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -142,57 +115,6 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Documentation Dropdown */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton
-                      tooltip="Documentation"
-                      isActive={currentPath.startsWith('/docs')}
-                    >
-                      <BookOpen
-                        className={cn(
-                          currentPath.startsWith('/docs') && 'text-violet-500',
-                        )}
-                      />
-                      <span>Documentation</span>
-                      <ChevronDown className="ml-auto opacity-50" />
-                    </SidebarMenuButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    side="right"
-                    align="start"
-                    className="min-w-56"
-                  >
-                    {docSections.map((section) => (
-                      <React.Fragment key={section.title}>
-                        <DropdownMenuLabel>{section.title}</DropdownMenuLabel>
-                        {section.items.map((item) => (
-                          <DropdownMenuItem key={item.url} asChild>
-                            <Link
-                              to={item.url}
-                              className={cn(
-                                currentPath === item.url &&
-                                  'bg-violet-500/10 text-violet-500',
-                              )}
-                            >
-                              {item.title}
-                            </Link>
-                          </DropdownMenuItem>
-                        ))}
-                        <DropdownMenuSeparator />
-                      </React.Fragment>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
@@ -226,7 +148,7 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium font-mono">
-                      Ralph v2
+                      Ralph v3
                     </span>
                     <span
                       className={cn(
@@ -362,7 +284,7 @@ function SiteFooter() {
         <span className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-500">
             <Brain className="w-3 h-3" />
-            Ralph v2
+            Ralph v3
           </span>
           {llmStatus ? (
             <span

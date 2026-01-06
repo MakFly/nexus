@@ -119,7 +119,6 @@ export const useRalphStore = create<RalphStore>((set) => ({
 let eventSource: EventSource | null = null
 let isConnecting = false
 let mountCount = 0
-let llmStatusInterval: NodeJS.Timeout | null = null
 
 // ============================================================
 // Fetch functions (defined before useRalphSSEInit to avoid hoisting issues)
@@ -333,16 +332,9 @@ export function useRalphSSEInit() {
       }
     })
 
-    // Start LLM status polling (globally, only once)
-    if (!llmStatusInterval) {
-      console.log('[LLM] Starting status polling (every 10s)')
-      fetchLLMStatus() // Initial fetch
-      llmStatusInterval = setInterval(() => {
-        fetchLLMStatus()
-      }, 10000) // Poll every 10 seconds
-    }
-
-    // Initial MCP status fetch (SSE will handle updates after)
+    // Initial LLM/MCP status fetch (SSE will handle real-time updates after)
+    console.log('[LLM] Fetching initial status')
+    fetchLLMStatus()
     console.log('[MCP] Fetching initial status')
     fetchMCPStatus()
 
