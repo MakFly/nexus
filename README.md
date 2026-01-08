@@ -1,54 +1,48 @@
 # Free Context
 
-Context management system for AI coding agents with MCP (Model Context Protocol) integration.
+Model Context Protocol (MCP) server for context and memory management with advanced search features and a modern web dashboard.
+
+## Quick Start
+
+```bash
+# Install dependencies
+bun install
+
+# Start MCP server
+cd server && bun run dev
+
+# Start web dashboard (in another terminal)
+cd front && bun run dev
+```
+
+## Documentation
+
+See the [docs](docs/) folder for:
+- [Project README](docs/README.md) - Complete project overview
+- [Contributing](docs/CONTRIBUTING.md) - Development guide
 
 ## Project Structure
 
-- `free-context-mcp/` - MCP server (TypeScript + Bun + SQLite)
-- `front/` - Frontend dashboard (TanStack Start + React)
-- `.claude/` - Claude Code configuration
-
-## Features
-
-- **Session Management**: Create and manage context sessions with malloc/free pattern
-- **Memory Storage**: Store decisions, context, code snippets with full-text search
-- **Checkpoints**: Save and restore context states
-- **MCP Protocol**: Standard Model Context Protocol integration
-
-## Development
-
-> **IMPORTANT:** Always use `bun` instead of `npm` in this project.
-
-### MCP Server
-
-```bash
-cd free-context-mcp
-bun install
-bun test.mjs     # Run tests
-bun start        # Start MCP server
+```
+free-context/
+├── server/              # MCP Server (Bun + SQLite)
+│   ├── src/            # Source code
+│   ├── docs/           # Server documentation
+│   ├── data/           # SQLite databases
+│   └── scripts/        # Shell scripts & diagnostics
+│
+├── front/              # Web Dashboard (TanStack Start)
+│   ├── src/            # React components
+│   └── lib/            # Utilities
+│
+└── docs/               # Project documentation
 ```
 
-### Frontend
+## Technology Stack
 
-```bash
-cd front
-bun install
-bun dev
-```
-
-## MCP Tools
-
-| Tool | Description |
-|------|-------------|
-| `context_malloc` | Initialize a new context management session |
-| `context_free` | Terminate a context management session |
-| `context_add_memory` | Store a memory in the current session |
-| `context_search` | Search stored memories using full-text search |
-| `context_checkpoint` | Create a checkpoint of the current context state |
-
-## Database
-
-SQLite database with FTS5 (Full-Text Search) located at `~/.free-context/database.db`.
+- **Server**: Bun, SQLite, Drizzle ORM, Hono
+- **Frontend**: TanStack Start, React 19, Tailwind CSS, shadcn/ui
+- **Protocol**: Model Context Protocol (MCP)
 
 ## License
 

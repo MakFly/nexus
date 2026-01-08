@@ -46,7 +46,7 @@ export function AnimatedCard({
         isVisible && 'opacity-100 translate-y-0',
         // Hover effect
         hoverStyles[hover],
-        className
+        className,
       )}
       style={{
         transitionDelay: `${delay}ms`,
@@ -59,7 +59,10 @@ export function AnimatedCard({
 }
 
 // Specialized variants
-export function StatCard({ children, ...props }: Omit<AnimatedCardProps, 'hover'>) {
+export function StatCard({
+  children,
+  ...props
+}: Omit<AnimatedCardProps, 'hover'>) {
   return (
     <AnimatedCard hover="lift" {...props}>
       {children}
@@ -67,7 +70,10 @@ export function StatCard({ children, ...props }: Omit<AnimatedCardProps, 'hover'
   )
 }
 
-export function FeatureCard({ children, ...props }: Omit<AnimatedCardProps, 'hover'>) {
+export function FeatureCard({
+  children,
+  ...props
+}: Omit<AnimatedCardProps, 'hover'>) {
   return (
     <AnimatedCard hover="glow" {...props}>
       {children}
@@ -75,7 +81,10 @@ export function FeatureCard({ children, ...props }: Omit<AnimatedCardProps, 'hov
   )
 }
 
-export function InteractiveCard({ children, ...props }: Omit<AnimatedCardProps, 'hover'>) {
+export function InteractiveCard({
+  children,
+  ...props
+}: Omit<AnimatedCardProps, 'hover'>) {
   return (
     <AnimatedCard hover="scale" {...props}>
       {children}

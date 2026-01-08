@@ -4,6 +4,28 @@ import vscDarkPlus from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark
 import vs from 'react-syntax-highlighter/dist/esm/styles/prism/vs'
 import { CopyButton } from './copy-button'
 import { cn } from '@/lib/utils'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
+import { Prose } from './prose'
+
+/**
+ * Markdown Props
+ */
+interface MarkdownProps {
+  content: string
+  className?: string
+}
+
+/**
+ * Code Props for ReactMarkdown code component
+ */
+interface CodeProps {
+  node?: unknown
+  inline?: boolean
+  className?: string
+  children?: React.ReactNode
+}
 
 interface CodeBlockProps {
   code: string
@@ -71,5 +93,41 @@ export function CodeBlock({
         </SyntaxHighlighter>
       </div>
     </div>
+  )
+}
+
+/**
+ * Markdown Component
+ * Renders markdown content with syntax highlighting for code blocks
+ */
+export function Markdown({ content, className }: MarkdownProps) {
+  return (
+    <Prose className={className}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        components={{
+          code({ node, inline, className, children, ...props }: CodeProps) {
+            const codeContent = String(children).replace(/\n$/, '')
+            const language = className?.replace(/language-/, '') || 'text'
+
+            if (inline) {
+              return (
+                <code
+                  className="px-1.5 py-0.5 rounded bg-muted text-sm font-mono text-violet-500"
+                  {...props}
+                >
+                  {children}
+                </code>
+              )
+            }
+
+            return <CodeBlock code={codeContent} language={language} />
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </Prose>
   )
 }

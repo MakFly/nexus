@@ -1,5 +1,5 @@
 {
-  "name": "ralph-dashboard",
+  "name": "free-context-dashboard",
   "private": true,
   "type": "module",
   "scripts": {
@@ -30,8 +30,12 @@
     "better-sqlite3": "^12.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "eslint-plugin-import": "^2.32.0",
+    "fuse.js": "^7.1.0",
     "lucide-react": "^0.562.0",
     "nitro": "^3.0.1-alpha.1",
+    "prettier-plugin-sort-imports": "^1.8.9",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -42,6 +46,7 @@
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "shadcn": "^3.6.2",
+    "shiki": "^3.21.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.0.6",

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface AnimatedMetricProps {
@@ -86,7 +86,8 @@ export function AnimatedMetric({
           currency: 'USD',
         }).format(v)
       case 'bytes':
-        if (v >= 1024 * 1024 * 1024) return `${(v / (1024 * 1024 * 1024)).toFixed(1)}GB`
+        if (v >= 1024 * 1024 * 1024)
+          return `${(v / (1024 * 1024 * 1024)).toFixed(1)}GB`
         if (v >= 1024 * 1024) return `${(v / (1024 * 1024)).toFixed(1)}MB`
         if (v >= 1024) return `${(v / 1024).toFixed(1)}KB`
         return `${v}B`
@@ -113,8 +114,18 @@ export function AnimatedMetric({
   }
 
   // Trend icon
-  const TrendIcon = actualTrend === 'up' ? TrendingUp : actualTrend === 'down' ? TrendingDown : Minus
-  const trendColor = actualTrend === 'up' ? 'text-green-500' : actualTrend === 'down' ? 'text-rose-500' : 'text-muted-foreground'
+  const TrendIcon =
+    actualTrend === 'up'
+      ? TrendingUp
+      : actualTrend === 'down'
+        ? TrendingDown
+        : Minus
+  const trendColor =
+    actualTrend === 'up'
+      ? 'text-green-500'
+      : actualTrend === 'down'
+        ? 'text-rose-500'
+        : 'text-muted-foreground'
 
   // Calculate percent change
   const percentChange = previousValue
@@ -124,7 +135,13 @@ export function AnimatedMetric({
   return (
     <div className="space-y-1">
       <div className="flex items-baseline gap-2">
-        <span className={cn('font-bold font-mono', sizeStyles[size], colorStyles[color])}>
+        <span
+          className={cn(
+            'font-bold font-mono',
+            sizeStyles[size],
+            colorStyles[color],
+          )}
+        >
           {formattedValue}
         </span>
         {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
@@ -137,7 +154,9 @@ export function AnimatedMetric({
           <div className={cn('flex items-center gap-1 text-xs', trendColor)}>
             <TrendIcon className="w-3 h-3" />
             <span className="font-medium">
-              {percentChange && percentChange !== 0 ? `${Math.abs(percentChange)}%` : '0%'}
+              {percentChange && percentChange !== 0
+                ? `${Math.abs(percentChange)}%`
+                : '0%'}
             </span>
           </div>
         )}
@@ -158,7 +177,7 @@ export function MetricCard({
     <div
       className={cn(
         'rounded-lg border bg-card p-4 transition-all hover:shadow-lg',
-        className
+        className,
       )}
       {...props}
     >

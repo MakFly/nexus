@@ -22,14 +22,20 @@ export function ModernGradient({
   const gradients = {
     default: 'bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10',
     mesh: 'bg-gradient-to-tr from-violet-500 via-purple-500 to-fuchsia-500',
-    aurora: 'bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-cyan-500/20',
-    sunset: 'bg-gradient-to-br from-orange-500/20 via-rose-500/20 to-purple-500/20',
-    ocean: 'bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-violet-500/20',
-    forest: 'bg-gradient-to-br from-green-500/20 via-emerald-500/20 to-teal-500/20',
+    aurora:
+      'bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-cyan-500/20',
+    sunset:
+      'bg-gradient-to-br from-orange-500/20 via-rose-500/20 to-purple-500/20',
+    ocean:
+      'bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-violet-500/20',
+    forest:
+      'bg-gradient-to-br from-green-500/20 via-emerald-500/20 to-teal-500/20',
   }
 
   return (
-    <div className={cn('relative overflow-hidden', gradients[variant], className)}>
+    <div
+      className={cn('relative overflow-hidden', gradients[variant], className)}
+    >
       {/* Animated overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
 
@@ -51,7 +57,7 @@ export function GlassCard({
     <div
       className={cn(
         'backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg shadow-xl',
-        className
+        className,
       )}
       {...props}
     >
@@ -71,7 +77,9 @@ export function AnimatedBorder({
   children: React.ReactNode
 }) {
   return (
-    <div className={cn('relative p-[1px] rounded-lg overflow-hidden', className)}>
+    <div
+      className={cn('relative p-[1px] rounded-lg overflow-hidden', className)}
+    >
       <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 animate-gradient-x" />
       <div className="relative bg-background rounded-lg">{children}</div>
     </div>
@@ -96,11 +104,7 @@ export function ShimmerEffect({
 
   return (
     <div
-      className={cn(
-        'animate-pulse bg-muted',
-        variants[variant],
-        className
-      )}
+      className={cn('animate-pulse bg-muted', variants[variant], className)}
     />
   )
 }

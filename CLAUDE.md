@@ -4,123 +4,75 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Free Context** is a context management system for AI coding agents. This monorepo contains:
-
-- **free-context-mcp/** - Backend MCP server (TypeScript + Bun + SQLite)
-- **front/** - Frontend dashboard (TanStack Start + React)
-
-## Important Rules
-
-> **CRITICAL:** Always use `bun` instead of `npm` in this project.
->
-> The project uses `bun:sqlite` which is built into Bun - do NOT use `better-sqlite3`.
+Free Context is a **Model Context Protocol (MCP) Server** project with a modern web dashboard. It provides context management capabilities for AI interactions, featuring a full-stack React application built with TanStack Start.
 
 ## Development Commands
 
-### free-context-mcp (MCP Server)
+Always use **bun** as the package manager (npm is not used in this project):
 
 ```bash
-cd free-context-mcp
-bun install              # Install dependencies
-bun run dev              # Watch mode
-bun start                # Start server
-bun test.mjs             # Run tests
-```
-
-### front (Frontend)
-
-```bash
-cd front
-bun install              # Install dependencies
-bun dev                  # Vite dev server
-bun run build            # Production build
-bun check                # Format + lint fix
+cd front/
+bun run dev          # Start development server
+bun run build        # Production build
+bun run preview      # Preview production build
+bun run test         # Run tests with Vitest
+bun run lint         # Run ESLint
+bun run format       # Run Prettier
+bun run check        # Format and lint code (prettier --write . && eslint --fix)
 ```
 
 ## Architecture
 
-### MCP Server (free-context-mcp)
+### Tech Stack
+- **Framework**: TanStack Start (full-stack React with file-based routing)
+- **Runtime**: React 19.2.0 with TypeScript
+- **Build Tool**: Vite 7.1.7
+- **Styling**: Tailwind CSS 4.0.6 + shadcn/ui component library
+- **Database**: better-sqlite3 (client-side SQLite for local data persistence)
+- **State Management**: Zustand 5.0.9
+- **Dev Tools**: TanStack Router Devtools + React Devtools (integrated in bottom-right corner)
 
-The MCP server provides context management tools via Model Context Protocol:
-
-**Tools Available:**
-- `context_malloc` - Initialize a new context management session
-- `context_free` - Terminate a context management session
-- `context_add_memory` - Store a memory in the current session
-- `context_search` - Search stored memories using full-text search
-- `context_checkpoint` - Create a checkpoint of the current context state
-
-**Database:**
-- SQLite with FTS5 (Full-Text Search)
-- Database location: `~/.free-context/database.db`
-- Tables: `sessions`, `memories`, `checkpoints`, `metrics`
-
-**File Structure:**
+### Project Structure
 ```
-free-context-mcp/
-├── src/
-│   ├── index.ts           # MCP server entry point
-│   ├── storage/
-│   │   ├── database.ts    # SQLite database wrapper
-│   │   └── schemas.ts     # Zod schemas
-│   └── tools/             # Tool implementations
-│       ├── malloc.ts
-│       ├── free.ts
-│       ├── addMemory.ts
-│       ├── search.ts
-│       └── checkpoint.ts
-└── test.mjs              # Test script
+free-context/
+└── front/                    # Frontend application
+    ├── src/
+    │   ├── routes/           # TanStack Start file-based routes
+    │   ├── components/ui/   # shadcn/ui components (30+ components)
+    │   ├── router.tsx        # Router configuration with routeTree
+    │   └── styles.css        # Tailwind + custom styles
+    ├── package.json
+    ├── vite.config.ts        # Vite plugins: Tailwind, MDX, TanStack Start
+    └── tsconfig.json         # Path alias: @/* → ./src/*
 ```
 
-### Frontend (front)
+### Routing
+- **File-based routing** via TanStack Router in `src/routes/`
+- Route tree is auto-generated in `routeTree.gen.ts`
+- Root route defines the HTML document shell with devtools
 
-Built with TanStack Start, React 19, and TypeScript.
+### Styling
+- **Tailwind CSS v4** with Vite plugin
+- **shadcn/ui** component library for consistent, accessible UI
+- Design tokens and custom styles in `src/styles.css`
 
-**Components:**
-- `src/components/ui/` - shadcn/ui components
+### MDX Support
+- MDX files are supported with GitHub Flavored Markdown (tables, etc.)
+- Configured via `@mdx-js/rollup` plugin in vite.config.ts
 
-**Routes:**
-- `src/routes/` - TanStack Start file-based routing
+### TypeScript Configuration
+- Strict mode enabled
+- Path alias: `@/*` maps to `./src/*`
+- Unused locals/parameters checked
 
-## Usage Patterns
+## Code Quality
 
-### Pattern 1: Start of Session
-```
-1. Call context_malloc to create a session
-2. Store the sessionId for subsequent calls
-3. Use context_add_memory to store important decisions
-4. Use context_checkpoint before major changes
-5. Call context_free when done
-```
+- **ESLint**: Uses TanStack's ESLint config
+- **Prettier**: Configured with no semicolons, single quotes
+- **Vitest**: Testing framework with @testing-library/react
 
-### Pattern 2: Search Past Context
-```
-context_search({
-  query: "decision authentication",
-  limit: 10
-})
-```
+## Development Notes
 
-## Environment Variables
-
-```bash
-# free-context-mcp
-FREE_CONTEXT_DB_PATH=~/.free-context/database.db  # Optional, default shown
-```
-
-## Adding New Tools
-
-1. Create tool file in `free-context-mcp/src/tools/yourTool.ts`
-2. Add Zod schema for input validation
-3. Implement the tool function
-4. Register in `src/index.ts` (ListToolsRequestSchema + CallToolRequestSchema)
-
-## Testing
-
-Run the MCP server tests:
-```bash
-cd free-context-mcp
-bun test.mjs
-```
-
-This will test all tools and verify database operations.
+- The app includes integrated devtools (bottom-right corner) for debugging router and React state
+- The project was recently transitioned from "Ralph MCP" to "Free Context MCP"
+- SQLite is used for client-side data storage (likely for context/memory management)
