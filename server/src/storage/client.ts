@@ -208,6 +208,8 @@ export async function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
     CREATE INDEX IF NOT EXISTS idx_memories_stack ON memories(stack);
     CREATE INDEX IF NOT EXISTS idx_memories_difficulty ON memories(difficulty);
+    CREATE INDEX IF NOT EXISTS idx_memories_created_at ON memories(created_at);
+    CREATE INDEX IF NOT EXISTS idx_memories_context_type ON memories(context_id, type);
     CREATE INDEX IF NOT EXISTS idx_contexts_stack ON contexts(stack);
     CREATE INDEX IF NOT EXISTS idx_contexts_difficulty ON contexts(difficulty);
     CREATE INDEX IF NOT EXISTS idx_relationships_source ON relationships(source_id);

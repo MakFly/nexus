@@ -197,7 +197,7 @@ export async function getMemory(args: unknown): Promise<CallToolResult> {
 }
 
 /**
- * List memories with optional filters
+ * List memories with optional filters and pagination info
  */
 export async function listMemories(args: unknown): Promise<CallToolResult> {
   try {
@@ -222,6 +222,35 @@ export async function listMemories(args: unknown): Promise<CallToolResult> {
       conditions.push(eq(memories.difficulty, input.difficulty));
     }
 
+    // Get total count for pagination info
+    const sqlite = getRawDb();
+    let countQuery = 'SELECT COUNT(*) as total FROM memories';
+    const countParams: unknown[] = [];
+
+    if (conditions.length > 0) {
+      const whereClauses: string[] = [];
+      if (input.contextId) {
+        whereClauses.push('context_id = ?');
+        countParams.push(input.contextId);
+      }
+      if (input.type) {
+        whereClauses.push('type = ?');
+        countParams.push(input.type);
+      }
+      if (input.stack) {
+        whereClauses.push('stack = ?');
+        countParams.push(input.stack);
+      }
+      if (input.difficulty) {
+        whereClauses.push('difficulty = ?');
+        countParams.push(input.difficulty);
+      }
+      countQuery += ' WHERE ' + whereClauses.join(' AND ');
+    }
+
+    const countResult = sqlite.prepare(countQuery).get(...countParams) as { total: number };
+    sqlite.close();
+
     const allMemories = await db.query.memories.findMany({
       where: conditions.length > 0 ? and(...conditions) : undefined,
       orderBy: [desc(memories.createdAt)],
@@ -242,6 +271,9 @@ export async function listMemories(args: unknown): Promise<CallToolResult> {
       // Content NOT included - use get_memory() to retrieve full content
     }));
 
+    const totalCount = countResult.total;
+    const hasMore = input.offset + compactMemories.length < totalCount;
+
     return {
       content: [
         {
@@ -249,7 +281,13 @@ export async function listMemories(args: unknown): Promise<CallToolResult> {
           text: JSON.stringify({
             success: true,
             memories: compactMemories,
-            total: compactMemories.length,
+            pagination: {
+              total: totalCount,
+              limit: input.limit,
+              offset: input.offset,
+              count: compactMemories.length,
+              hasMore,
+            },
             note: 'Full content not included. Use get_memory() to retrieve specific memory content.',
           }, null, 2),
         },

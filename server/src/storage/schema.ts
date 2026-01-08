@@ -3,7 +3,7 @@
  * User-less architecture - single-user system
  */
 
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 import { relations } from 'drizzle-orm';
 
@@ -37,7 +37,13 @@ export const memories = sqliteTable('memories', {
   metadata: text('metadata', { mode: 'json' }).notNull().default('{}'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => [
+  index('memories_context_id_idx').on(table.contextId),
+  index('memories_type_idx').on(table.type),
+  index('memories_created_at_idx').on(table.createdAt),
+  index('memories_stack_idx').on(table.stack),
+  index('memories_context_type_idx').on(table.contextId, table.type),
+]);
 
 /**
  * Relationships table - stores connections between memories
@@ -88,7 +94,10 @@ export const events = sqliteTable('events', {
   data: text('data', { mode: 'json' }).notNull(), // Event payload
   metadata: text('metadata', { mode: 'json' }).notNull().default('{}'), // Optional metadata
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => [
+  index('events_type_idx').on(table.type),
+  index('events_created_at_idx').on(table.createdAt),
+]);
 
 // Export types for use in application
 export type Context = typeof contexts.$inferSelect;

@@ -11,6 +11,7 @@ import {
   corsMiddleware,
   errorHandler,
   loggingMiddleware,
+  rateLimitMiddleware,
   healthCheck,
 } from './middleware.js';
 import { contextsRouter } from './contexts.js';
@@ -27,6 +28,7 @@ export async function createApiServer() {
 
   // Apply middleware
   app.use('*', corsMiddleware);
+  app.use('*', rateLimitMiddleware);
   app.use('*', errorHandler);
   app.use('*', loggingMiddleware);
 
