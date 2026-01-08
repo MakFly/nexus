@@ -8,6 +8,7 @@ import { getDb, generateId, getRawDb } from '../storage/client.js';
 import { memories, contexts } from '../storage/schema.js';
 import { eq, and, desc, asc } from 'drizzle-orm';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { generateDigest } from './pmp2.js';
 
 // Valid memory types
 const memoryTypes = ['note', 'conversation', 'snippet', 'reference', 'task', 'idea'] as const;
@@ -81,12 +82,16 @@ export async function addMemory(args: unknown): Promise<CallToolResult> {
     const now = new Date();
     const ftsId = generateId();
 
+    // PMP2: Auto-generate digest for token efficiency
+    const digest = generateDigest(input.content);
+
     await db.insert(memories).values({
       id: memoryId,
       contextId: input.contextId,
       type: input.type,
       title: input.title,
       content: input.content,
+      digest, // PMP2: Store digest
       stack: input.stack,
       difficulty: input.difficulty,
       metadata: input.metadata,

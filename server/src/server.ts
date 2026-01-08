@@ -52,6 +52,15 @@ import { findRelationships } from './tools/find-relationships.js';
 import { autoSaveMemory } from './tools/auto-save.js';
 import { mgrep, mgrepFiles } from './tools/mgrep.js';
 
+// Import PMP2 tools (Progressive Memory Protocol v2 - token optimization)
+import {
+  quickSearch,
+  listDigests,
+  expandMemory,
+  sessionStats,
+  clearSession,
+} from './tools/pmp2.js';
+
 /**
  * Setup default hooks
  * Registers built-in hooks for logging, performance monitoring, and event tracking
@@ -703,6 +712,94 @@ export async function createServer() {
             required: [],
           },
         },
+        // PMP2 Tools (Progressive Memory Protocol v2 - Token Optimization)
+        {
+          name: 'quick_search',
+          description: 'Ultra-compact memory search returning only IDs, titles, and relevance scores. Uses ~15 tokens per result vs ~800 for full memories. Use list_digests() for summaries, expand_memory() for full content.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: {
+                type: 'string',
+                description: 'Search query (FTS5 full-text search)',
+                minLength: 1,
+              },
+              contextId: {
+                type: 'string',
+                description: 'Limit search to a specific context',
+              },
+              type: {
+                type: 'string',
+                enum: ['note', 'conversation', 'snippet', 'reference', 'task', 'idea'],
+                description: 'Filter by memory type',
+              },
+              limit: {
+                type: 'number',
+                description: 'Maximum results to return',
+                default: 10,
+              },
+            },
+            required: ['query'],
+          },
+        },
+        {
+          name: 'list_digests',
+          description: 'Get 1-sentence summaries for specific memory IDs. Uses ~20 tokens per result. Perfect for deciding which memories to expand.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              ids: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Array of memory IDs to get digests for (max 20)',
+                minItems: 1,
+                maxItems: 20,
+              },
+            },
+            required: ['ids'],
+          },
+        },
+        {
+          name: 'expand_memory',
+          description: 'Get full memory content with delta tracking. Returns reference if memory was already accessed in session (saves ~200 tokens). Use force=true to re-fetch.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                description: 'Memory ID to expand',
+              },
+              force: {
+                type: 'boolean',
+                description: 'Force re-fetch even if already seen',
+                default: false,
+              },
+            },
+            required: ['id'],
+          },
+        },
+        {
+          name: 'session_stats',
+          description: 'Show token savings statistics for the current session. Displays queries, memories accessed, and total tokens saved.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              reset: {
+                type: 'boolean',
+                description: 'Reset session statistics',
+                default: false,
+              },
+            },
+          },
+        },
+        {
+          name: 'clear_session',
+          description: 'Clear session state for a fresh start. Resets seen memories and token counters.',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       ],
     };
   });
@@ -763,6 +860,18 @@ export async function createServer() {
         return executeToolWithHooks(name, args, () => mgrep(args));
       case 'mgrep_files':
         return executeToolWithHooks(name, args, () => mgrepFiles(args));
+
+      // PMP2 tools (Progressive Memory Protocol v2 - token optimization)
+      case 'quick_search':
+        return executeToolWithHooks(name, args, () => quickSearch(args));
+      case 'list_digests':
+        return executeToolWithHooks(name, args, () => listDigests(args));
+      case 'expand_memory':
+        return executeToolWithHooks(name, args, () => expandMemory(args));
+      case 'session_stats':
+        return executeToolWithHooks(name, args, () => sessionStats(args));
+      case 'clear_session':
+        return executeToolWithHooks(name, args, () => clearSession(args));
 
       default:
         return {

@@ -32,6 +32,7 @@ export const memories = sqliteTable('memories', {
   type: text('type').notNull(), // note, conversation, snippet, reference, task, idea
   title: text('title').notNull(),
   content: text('content').notNull(),
+  digest: text('digest'), // PMP2: 1-sentence summary for token efficiency (~80 chars max)
   stack: text('stack'), // Technology stack: nextjs, laravel, symfony, react19, vuejs, devops, etc.
   difficulty: text('difficulty'), // easy, normal, hard
   metadata: text('metadata', { mode: 'json' }).notNull().default('{}'),

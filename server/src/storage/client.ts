@@ -202,6 +202,38 @@ export async function initializeDatabase() {
     // Ignore if columns already exist
   }
 
+  // PMP2: Add digest column for token optimization
+  try {
+    const digestColumn = sqlite.query(`
+      SELECT COUNT(*) as count FROM pragma_table_info('memories') WHERE name = 'digest'
+    `).get() as { count: number };
+
+    if (digestColumn.count === 0) {
+      console.log('[DB] Adding digest column for PMP2 token optimization');
+      sqlite.exec(`ALTER TABLE memories ADD COLUMN digest TEXT`);
+
+      // Generate digests for existing memories (first sentence, max 80 chars)
+      sqlite.exec(`
+        UPDATE memories
+        SET digest = SUBSTR(
+          TRIM(SUBSTR(content, 1,
+            CASE
+              WHEN INSTR(content, '. ') > 0 THEN INSTR(content, '. ')
+              WHEN INSTR(content, '.') > 0 THEN INSTR(content, '.')
+              ELSE 80
+            END
+          )),
+          1, 80
+        )
+        WHERE digest IS NULL
+      `);
+
+      console.log('[DB] Digest column added and backfilled');
+    }
+  } catch (e) {
+    console.log('[DB] Digest migration skipped:', e);
+  }
+
   // Create indexes for better performance (no user indexes)
   sqlite.exec(`
     CREATE INDEX IF NOT EXISTS idx_memories_context_id ON memories(context_id);
