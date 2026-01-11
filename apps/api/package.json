@@ -1,0 +1,26 @@
+{
+  "name": "@nexus/api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "test": "bun test",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.7.5",
+    "@nexus/storage": "workspace:*",
+    "@nexus/core": "workspace:*",
+    "@nexus/search": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/bun": "latest",
+    "typescript": "^5.7.2"
+  }
+}

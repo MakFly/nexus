@@ -1,61 +1,97 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useDataStore } from '@/stores/dataStore'
+import { useState, useEffect } from 'react'
+import { useNexusStore } from '@/stores/nexusStore'
 import {
   BrainIcon,
   FolderKanbanIcon,
   SearchIcon,
   BarChart3Icon,
   ArrowRightIcon,
-  PlusIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ServerOffIcon,
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { AppLayout } from '@/components/app-layout'
+import { DashboardSkeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/')({
   component: Dashboard,
 })
 
 function Dashboard() {
-  const { getStats, contexts, memories } = useDataStore()
-  const stats = getStats()
+  const {
+    isConnected,
+    stats,
+    recallMemories,
+  } = useNexusStore()
+
+  const [loading, setLoading] = useState(true)
+  const [recentMemories, setRecentMemories] = useState<any[]>([])
+  const [totalMemories, setTotalMemories] = useState(0)
+
+  useEffect(() => {
+    // Only load memories, connection and stats are loaded by root loader
+    const loadMemories = async () => {
+      try {
+        const result = await recallMemories({ limit: 5 })
+        setRecentMemories(result.memories)
+        setTotalMemories(result.total)
+      } catch (e) {
+        console.error('Failed to load memories:', e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadMemories()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const quickActions = [
-    {
-      title: 'View Contexts',
-      description: 'Browse and manage your contexts',
-      icon: FolderKanbanIcon,
-      href: '/contexts',
-      color: 'text-blue-500',
-    },
-    {
-      title: 'View Memories',
-      description: 'Browse and manage your memories',
-      icon: BrainIcon,
-      href: '/memories',
-      color: 'text-purple-500',
-    },
-    {
-      title: 'Search',
-      description: 'Search through your data',
-      icon: SearchIcon,
-      href: '/search',
-      color: 'text-green-500',
-    },
-    {
-      title: 'Statistics',
-      description: 'View detailed statistics',
-      icon: BarChart3Icon,
-      href: '/stats',
-      color: 'text-orange-500',
-    },
+    { title: 'Memories', description: 'Browse and manage', icon: BrainIcon, href: '/memories', color: 'text-purple-500' },
+    { title: 'Search', description: 'Search your code', icon: SearchIcon, href: '/search', color: 'text-green-500' },
+    { title: 'Learning', description: 'View patterns', icon: BarChart3Icon, href: '/learning', color: 'text-orange-500' },
+    { title: 'Statistics', description: 'View stats', icon: BarChart3Icon, href: '/stats', color: 'text-blue-500' },
   ]
 
-  // Recent memories (last 5)
-  const recentMemories = [...memories]
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, 5)
+  // Loading state - show skeleton
+  if (loading) {
+    return <AppLayout><DashboardSkeleton /></AppLayout>
+  }
 
+  // API disconnected - show error state
+  if (!isConnected) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
+            <ServerOffIcon className="h-10 w-10 text-destructive" />
+          </div>
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-bold">API Server Not Running</h1>
+            <p className="text-muted-foreground max-w-md">
+              Start the Nexus API server to access your memories, search code, and use all features.
+            </p>
+          </div>
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground mb-2">Run this command:</p>
+              <code className="bg-muted px-4 py-2 rounded text-sm block font-mono">
+                cd apps/api && bun src/index.ts
+              </code>
+            </CardContent>
+          </Card>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Retry Connection
+          </Button>
+        </div>
+      </AppLayout>
+    )
+  }
+
+  // Connected - show dashboard
   return (
     <AppLayout>
       <div className="space-y-8">
@@ -63,30 +99,35 @@ function Dashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome to your local context manager
-            </p>
+            <p className="text-muted-foreground">Welcome to Nexus</p>
           </div>
-          <Button asChild>
-            <Link to="/contexts">
-              <PlusIcon className="mr-2 h-4 w-4" />
-              New Context
-            </Link>
-          </Button>
+          <Badge variant="outline" className="gap-1">
+            <CheckCircleIcon className="h-3 w-3 text-green-500" />
+            Connected
+          </Badge>
         </div>
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contexts</CardTitle>
+              <CardTitle className="text-sm font-medium">Indexed Files</CardTitle>
               <FolderKanbanIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalContexts}</div>
-              <p className="text-xs text-muted-foreground">
-                Contexts stored locally
-              </p>
+              <div className="text-2xl font-bold">{stats?.files || 0}</div>
+              <p className="text-xs text-muted-foreground">Files in database</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Code Chunks</CardTitle>
+              <SearchIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.chunks || 0}</div>
+              <p className="text-xs text-muted-foreground">Chunks indexed</p>
             </CardContent>
           </Card>
 
@@ -96,23 +137,8 @@ function Dashboard() {
               <BrainIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalMemories}</div>
-              <p className="text-xs text-muted-foreground">
-                Memories stored locally
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Storage</CardTitle>
-              <BarChart3Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Local</div>
-              <p className="text-xs text-muted-foreground">
-                Browser localStorage
-              </p>
+              <div className="text-2xl font-bold">{totalMemories}</div>
+              <p className="text-xs text-muted-foreground">Memories stored</p>
             </CardContent>
           </Card>
 
@@ -123,9 +149,7 @@ function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">Ready</div>
-              <p className="text-xs text-muted-foreground">
-                System operational
-              </p>
+              <p className="text-xs text-muted-foreground">System operational</p>
             </CardContent>
           </Card>
         </div>
@@ -142,40 +166,28 @@ function Dashboard() {
                 <BrainIcon className="mb-2 h-8 w-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">No memories yet</p>
                 <Button variant="link" asChild className="mt-2">
-                  <Link to="/contexts">Create your first context</Link>
+                  <Link to="/memories">Create your first memory</Link>
                 </Button>
               </div>
             ) : (
               <div className="space-y-3">
-                {recentMemories.map((memory) => {
-                  const context = contexts.find((c) => c.id === memory.contextId)
-                  return (
-                    <div
-                      key={memory.id}
-                      className="flex items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                        <BrainIcon className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="line-clamp-2 text-sm font-medium">
-                          {memory.content}
-                        </p>
-                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{new Date(memory.createdAt).toLocaleDateString()}</span>
-                          {context && (
-                            <>
-                              <span>•</span>
-                              <span className="rounded-full bg-secondary px-1.5 py-0.5">
-                                {context.title}
-                              </span>
-                            </>
-                          )}
-                        </div>
+                {recentMemories.map((memory) => (
+                  <div
+                    key={memory.id}
+                    className="flex items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <BrainIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="line-clamp-2 text-sm font-medium">{memory.summary}</p>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{new Date(memory.created_at).toLocaleDateString()}</span>
+                        <Badge variant="outline" className="text-xs capitalize">{memory.type}</Badge>
                       </div>
                     </div>
-                  )
-                })}
+                  </div>
+                ))}
               </div>
             )}
             {recentMemories.length > 0 && (
@@ -191,56 +203,26 @@ function Dashboard() {
         {/* Quick Actions */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {quickActions.map((action) => (
-              <Card key={action.href} className="group hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
+              <Link key={action.href} to={action.href}>
+                <Card className="group hover:shadow-md transition-shadow h-full">
+                  <CardHeader className="pb-3">
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-lg bg-muted ${action.color}`}>
                         <action.icon className="h-5 w-5" />
                       </div>
                       <div>
                         <CardTitle className="text-base">{action.title}</CardTitle>
-                        <CardDescription className="text-sm">
-                          {action.description}
-                        </CardDescription>
+                        <CardDescription className="text-xs">{action.description}</CardDescription>
                       </div>
                     </div>
-                    <ArrowRightIcon className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Link to={action.href}>
-                    <Button variant="ghost" className="w-full justify-start">
-                      Go to {action.title}
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
-
-        {/* Getting Started */}
-        {stats.totalContexts === 0 && stats.totalMemories === 0 && (
-          <Card className="border-dashed">
-            <CardHeader>
-              <CardTitle>Getting Started</CardTitle>
-              <CardDescription>
-                Create your first context or memory to get started
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex gap-2">
-              <Link to="/contexts">
-                <Button>Create Context</Button>
-              </Link>
-              <Link to="/memories">
-                <Button variant="outline">View Memories</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </AppLayout>
   )

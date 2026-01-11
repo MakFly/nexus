@@ -1,15 +1,32 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
-import { useDataStore, type Memory } from '@/stores/dataStore'
+import { useState, useEffect, useCallback } from 'react'
+import {
+  useNexusStore,
+  type MemoryCompact,
+  type MemoryFull,
+  type MemoryType,
+  type MemoryScope,
+} from '@/stores/nexusStore'
 import {
   BrainIcon,
   CodeIcon,
   FileTextIcon,
-  FilterIcon,
   PlusIcon,
   SearchIcon,
   Trash2Icon,
   EditIcon,
+  LightbulbIcon,
+  CheckCircleIcon,
+  SettingsIcon,
+  ZapIcon,
+  RefreshCwIcon,
+  LinkIcon,
+  GlobeIcon,
+  GitBranchIcon,
+  TicketIcon,
+  BoxIcon,
+  FolderIcon,
+  ServerOffIcon,
 } from 'lucide-react'
 import { AppLayout } from '@/components/app-layout'
 import { Button } from '@/components/ui/button'
@@ -17,6 +34,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Slider } from '@/components/ui/slider'
 import {
   Select,
   SelectContent,
@@ -34,121 +52,250 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { MemoriesSkeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/memories/')({
   component: MemoriesList,
+  pendingComponent: () => <AppLayout><MemoriesSkeleton /></AppLayout>,
 })
 
-function MemoriesList() {
-  const { memories, contexts, addMemory, updateMemory, deleteMemory } =
-    useDataStore()
+const MEMORY_TYPES: { value: MemoryType; label: string; icon: typeof FileTextIcon }[] = [
+  { value: 'decision', label: 'Decision', icon: CheckCircleIcon },
+  { value: 'preference', label: 'Preference', icon: SettingsIcon },
+  { value: 'fact', label: 'Fact', icon: LightbulbIcon },
+  { value: 'note', label: 'Note', icon: FileTextIcon },
+  { value: 'discovery', label: 'Discovery', icon: ZapIcon },
+  { value: 'bugfix', label: 'Bugfix', icon: CodeIcon },
+  { value: 'feature', label: 'Feature', icon: BoxIcon },
+  { value: 'refactor', label: 'Refactor', icon: RefreshCwIcon },
+  { value: 'change', label: 'Change', icon: EditIcon },
+]
 
+const MEMORY_SCOPES: { value: MemoryScope; label: string; icon: typeof GlobeIcon }[] = [
+  { value: 'repo', label: 'Repository', icon: FolderIcon },
+  { value: 'branch', label: 'Branch', icon: GitBranchIcon },
+  { value: 'ticket', label: 'Ticket', icon: TicketIcon },
+  { value: 'feature', label: 'Feature', icon: BoxIcon },
+  { value: 'global', label: 'Global', icon: GlobeIcon },
+]
+
+function MemoriesList() {
+  const {
+    isConnected,
+    recallMemories,
+    batchMemories,
+    createMemory,
+    updateMemory,
+    deleteMemory,
+  } = useNexusStore()
+
+  // State
+  const [memories, setMemories] = useState<MemoryCompact[]>([])
+  const [expandedMemories, setExpandedMemories] = useState<Map<number, MemoryFull>>(new Map())
+  const [loading, setLoading] = useState(true)
+  const [total, setTotal] = useState(0)
+
+  // Filters
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<string>('all')
-  const [filterContext, setFilterContext] = useState<string>('all')
+  const [filterScope, setFilterScope] = useState<string>('all')
+
+  // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingMemory, setEditingMemory] = useState<string | null>(null)
+  const [editingMemory, setEditingMemory] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     title: '',
-    content: '',
-    type: 'note' as Memory['type'],
-    contextId: '',
+    narrative: '',
+    type: 'note' as MemoryType,
+    scope: 'repo' as MemoryScope,
     tags: [] as string[],
+    confidence: 0.8,
   })
 
-  const filteredMemories = memories
-    .filter((memory) => {
-      const query = searchQuery.toLowerCase()
-      const matchesSearch =
-        memory.content.toLowerCase().includes(query) ||
-        memory.title.toLowerCase().includes(query) ||
-        memory.tags.some((tag) => tag.toLowerCase().includes(query))
+  // Load memories
+  const loadMemories = useCallback(async () => {
+    setLoading(true)
+    try {
+      const result = await recallMemories({
+        q: searchQuery || undefined,
+        type: filterType !== 'all' ? (filterType as MemoryType) : undefined,
+        scope: filterScope !== 'all' ? (filterScope as MemoryScope) : undefined,
+        limit: 50,
+      })
+      setMemories(result.memories)
+      setTotal(result.total)
+    } catch (e) {
+      console.error('Failed to load memories:', e)
+    } finally {
+      setLoading(false)
+    }
+  }, [recallMemories, searchQuery, filterType, filterScope])
 
-      const matchesType = filterType === 'all' || memory.type === filterType
-      const matchesContext =
-        filterContext === 'all' || memory.contextId === filterContext
+  // Initial load + filter changes (unified effect) - connection checked by root loader
+  useEffect(() => {
+    if (isConnected) {
+      // Debounce for filter changes, immediate for initial load
+      const timer = setTimeout(() => {
+        loadMemories()
+      }, searchQuery || filterType !== 'all' || filterScope !== 'all' ? 300 : 0)
 
-      return matchesSearch && matchesType && matchesContext
-    })
-    .sort((a, b) => b.createdAt - a.createdAt)
+      return () => clearTimeout(timer)
+    } else {
+      setLoading(false)
+    }
+  }, [isConnected, loadMemories, searchQuery, filterType, filterScope])
 
-  const groupedMemories = filteredMemories.reduce(
+  // Expand memory to get full details
+  const expandMemory = async (id: number) => {
+    if (expandedMemories.has(id)) {
+      // Collapse
+      const newMap = new Map(expandedMemories)
+      newMap.delete(id)
+      setExpandedMemories(newMap)
+      return
+    }
+
+    try {
+      const [full] = await batchMemories([id])
+      if (full) {
+        setExpandedMemories(new Map(expandedMemories).set(id, full))
+      }
+    } catch (e) {
+      toast.error('Failed to load memory details')
+    }
+  }
+
+  // Group by date
+  const groupedMemories = memories.reduce(
     (acc, memory) => {
-      const date = new Date(memory.createdAt).toLocaleDateString()
+      const date = new Date(memory.created_at).toLocaleDateString()
       if (!acc[date]) {
         acc[date] = []
       }
       acc[date].push(memory)
       return acc
     },
-    {} as Record<string, typeof filteredMemories>,
+    {} as Record<string, MemoryCompact[]>
   )
 
-  const getMemoryIcon = (type: Memory['type']) => {
-    switch (type) {
-      case 'note':
-        return FileTextIcon
-      case 'snippet':
-        return CodeIcon
-      case 'reference':
-        return BrainIcon
-      default:
-        return FileTextIcon
-    }
+  const getTypeConfig = (type: MemoryType) => {
+    return MEMORY_TYPES.find((t) => t.value === type) || MEMORY_TYPES[3]
+  }
+
+  const getScopeConfig = (scope: MemoryScope) => {
+    return MEMORY_SCOPES.find((s) => s.value === scope) || MEMORY_SCOPES[0]
   }
 
   const handleCreate = () => {
     setEditingMemory(null)
     setFormData({
       title: '',
-      content: '',
+      narrative: '',
       type: 'note',
-      contextId: contexts.length > 0 ? contexts[0].id : '',
+      scope: 'repo',
       tags: [],
+      confidence: 0.8,
     })
     setIsDialogOpen(true)
   }
 
-  const handleEdit = (memory: Memory) => {
-    setEditingMemory(memory.id)
-    setFormData({
-      title: memory.title,
-      content: memory.content,
-      type: memory.type,
-      contextId: memory.contextId || '',
-      tags: memory.tags,
-    })
-    setIsDialogOpen(true)
+  const handleEdit = async (memory: MemoryCompact) => {
+    // Load full memory
+    try {
+      const [full] = await batchMemories([memory.id])
+      if (full) {
+        setEditingMemory(memory.id)
+        setFormData({
+          title: full.title,
+          narrative: full.narrative || '',
+          type: full.type,
+          scope: full.scope,
+          tags: full.tags,
+          confidence: full.confidence,
+        })
+        setIsDialogOpen(true)
+      }
+    } catch (e) {
+      toast.error('Failed to load memory for editing')
+    }
   }
 
-  const handleSave = () => {
-    if (!formData.title.trim() || !formData.content.trim()) {
-      toast.error('Title and content are required')
+  const handleSave = async () => {
+    if (!formData.title.trim()) {
+      toast.error('Title is required')
       return
     }
 
-    if (editingMemory) {
-      updateMemory(editingMemory, formData)
-      toast.success('Memory updated')
-    } else {
-      addMemory(formData)
-      toast.success('Memory created')
-    }
+    try {
+      if (editingMemory) {
+        await updateMemory(editingMemory, {
+          title: formData.title,
+          narrative: formData.narrative,
+          type: formData.type,
+          scope: formData.scope,
+          tags: formData.tags,
+          confidence: formData.confidence,
+        })
+        toast.success('Memory updated')
+      } else {
+        await createMemory({
+          session_id: `web-${Date.now()}`,
+          project: 'nexus',
+          title: formData.title,
+          narrative: formData.narrative,
+          type: formData.type,
+          scope: formData.scope,
+          tags: formData.tags,
+          confidence: formData.confidence,
+        })
+        toast.success('Memory created')
+      }
 
-    setIsDialogOpen(false)
-    setFormData({
-      title: '',
-      content: '',
-      type: 'note',
-      contextId: '',
-      tags: [],
-    })
-    setEditingMemory(null)
+      setIsDialogOpen(false)
+      loadMemories()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to save memory')
+    }
   }
 
-  const handleDelete = (id: string) => {
-    deleteMemory(id)
-    toast.success('Memory deleted')
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteMemory(id)
+      toast.success('Memory deleted')
+      loadMemories()
+    } catch (e) {
+      toast.error('Failed to delete memory')
+    }
+  }
+
+  // Loading state - show skeleton
+  if (loading) {
+    return <AppLayout><MemoriesSkeleton /></AppLayout>
+  }
+
+  // API disconnected - show error
+  if (!isConnected) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
+            <ServerOffIcon className="h-10 w-10 text-destructive" />
+          </div>
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-bold">API Server Not Running</h1>
+            <p className="text-muted-foreground max-w-md">
+              Start the Nexus API server to manage your memories.
+            </p>
+          </div>
+          <code className="bg-muted px-4 py-2 rounded text-sm font-mono">
+            cd apps/api && bun src/index.ts
+          </code>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Retry Connection
+          </Button>
+        </div>
+      </AppLayout>
+    )
   }
 
   return (
@@ -158,10 +305,10 @@ function MemoriesList() {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Memories</h2>
             <p className="text-muted-foreground">
-              Browse and manage your memories
+              {total} memories stored
             </p>
           </div>
-          <Button onClick={handleCreate} disabled={contexts.length === 0}>
+          <Button onClick={handleCreate}>
             <PlusIcon className="mr-2 h-4 w-4" />
             New Memory
           </Button>
@@ -181,43 +328,40 @@ function MemoriesList() {
                 />
               </div>
 
-              <Select
-                value={filterType}
-                onValueChange={setFilterType}
-              >
+              <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder="Filter by type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="note">Note</SelectItem>
-                  <SelectItem value="snippet">Snippet</SelectItem>
-                  <SelectItem value="reference">Reference</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={filterContext} onValueChange={setFilterContext}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Filter by context" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Contexts</SelectItem>
-                  {contexts.map((context) => (
-                    <SelectItem key={context.id} value={context.id}>
-                      {context.title}
+                  {MEMORY_TYPES.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              {(filterType !== 'all' ||
-                filterContext !== 'all' ||
-                searchQuery) && (
+              <Select value={filterScope} onValueChange={setFilterScope}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Filter by scope" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Scopes</SelectItem>
+                  {MEMORY_SCOPES.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {(filterType !== 'all' || filterScope !== 'all' || searchQuery) && (
                 <Button
                   variant="ghost"
                   onClick={() => {
                     setFilterType('all')
-                    setFilterContext('all')
+                    setFilterScope('all')
                     setSearchQuery('')
                   }}
                 >
@@ -228,26 +372,27 @@ function MemoriesList() {
           </CardContent>
         </Card>
 
-        {/* Memories Timeline */}
-        {filteredMemories.length === 0 ? (
+        {/* Empty State */}
+        {memories.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <BrainIcon className="mb-4 h-16 w-16 text-muted-foreground/50" />
             <h3 className="text-lg font-semibold">No memories found</h3>
             <p className="text-muted-foreground mb-4">
-              {searchQuery || filterType !== 'all' || filterContext !== 'all'
+              {searchQuery || filterType !== 'all' || filterScope !== 'all'
                 ? 'Try adjusting your filters'
-                : contexts.length === 0
-                ? 'Create a context first to add memories'
                 : 'Create your first memory to get started'}
             </p>
-            {contexts.length > 0 && !searchQuery && (
+            {!searchQuery && filterType === 'all' && filterScope === 'all' && (
               <Button onClick={handleCreate}>
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Create Memory
               </Button>
             )}
           </div>
-        ) : (
+        )}
+
+        {/* Memories Timeline */}
+        {memories.length > 0 && (
           <div className="space-y-8">
             {Object.entries(groupedMemories).map(([date, dayMemories]) => (
               <div key={date} className="relative">
@@ -260,8 +405,7 @@ function MemoriesList() {
                     <div>
                       <h3 className="font-semibold">{date}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {dayMemories.length}{' '}
-                        {dayMemories.length === 1 ? 'memory' : 'memories'}
+                        {dayMemories.length} {dayMemories.length === 1 ? 'memory' : 'memories'}
                       </p>
                     </div>
                   </div>
@@ -270,15 +414,20 @@ function MemoriesList() {
                 {/* Grid Layout */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ml-5 border-l-2 border-muted pl-8">
                   {dayMemories.map((memory) => {
-                    const Icon = getMemoryIcon(memory.type)
-                    const context = contexts.find(
-                      (c) => c.id === memory.contextId,
-                    )
+                    const typeConfig = getTypeConfig(memory.type)
+                    const scopeConfig = getScopeConfig(memory.scope)
+                    const TypeIcon = typeConfig.icon
+                    const ScopeIcon = scopeConfig.icon
+                    const expanded = expandedMemories.get(memory.id)
 
                     return (
                       <Card
                         key={memory.id}
-                        className="group hover:shadow-md transition-all cursor-pointer"
+                        className={cn(
+                          'group hover:shadow-md transition-all cursor-pointer',
+                          expanded && 'col-span-full'
+                        )}
+                        onClick={() => expandMemory(memory.id)}
                       >
                         <CardContent className="p-4">
                           <div className="flex flex-col gap-3">
@@ -286,13 +435,14 @@ function MemoriesList() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                                  <Icon className="h-3.5 w-3.5 text-primary" />
+                                  <TypeIcon className="h-3.5 w-3.5 text-primary" />
                                 </div>
-                                <Badge
-                                  variant="outline"
-                                  className="capitalize text-xs"
-                                >
-                                  {memory.type}
+                                <Badge variant="outline" className="capitalize text-xs">
+                                  {typeConfig.label}
+                                </Badge>
+                                <Badge variant="secondary" className="text-xs">
+                                  <ScopeIcon className="h-3 w-3 mr-1" />
+                                  {scopeConfig.label}
                                 </Badge>
                               </div>
                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -300,7 +450,10 @@ function MemoriesList() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-7 w-7"
-                                  onClick={() => handleEdit(memory)}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleEdit(memory)
+                                  }}
                                 >
                                   <EditIcon className="h-3 w-3" />
                                 </Button>
@@ -308,51 +461,97 @@ function MemoriesList() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-7 w-7"
-                                  onClick={() => handleDelete(memory.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDelete(memory.id)
+                                  }}
                                 >
                                   <Trash2Icon className="h-3 w-3 text-destructive" />
                                 </Button>
                               </div>
                             </div>
 
-                            {/* Title */}
-                            {memory.title && (
-                              <h4 className="font-semibold text-sm line-clamp-1">
-                                {memory.title}
-                              </h4>
-                            )}
-
-                            {/* Content Preview */}
-                            <p className="text-sm text-muted-foreground line-clamp-3 whitespace-pre-wrap">
-                              {memory.content}
+                            {/* Summary */}
+                            <p className="text-sm font-medium line-clamp-2">
+                              {memory.summary}
                             </p>
 
-                            {/* Context Badge */}
-                            {context && (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs w-fit"
-                              >
-                                {context.title}
-                              </Badge>
-                            )}
+                            {/* Confidence */}
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary rounded-full"
+                                  style={{ width: `${memory.confidence * 100}%` }}
+                                />
+                              </div>
+                              <span>{Math.round(memory.confidence * 100)}%</span>
+                            </div>
 
-                            {/* Tags */}
-                            {memory.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {memory.tags.slice(0, 3).map((tag) => (
-                                  <Badge
-                                    key={tag}
-                                    variant="outline"
-                                    className="text-xs"
-                                  >
-                                    {tag}
-                                  </Badge>
-                                ))}
-                                {memory.tags.length > 3 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{memory.tags.length - 3}
-                                  </Badge>
+                            {/* Expanded Content */}
+                            {expanded && (
+                              <div className="mt-4 pt-4 border-t space-y-3">
+                                <div>
+                                  <h4 className="font-semibold">{expanded.title}</h4>
+                                  {expanded.subtitle && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {expanded.subtitle}
+                                    </p>
+                                  )}
+                                </div>
+
+                                {expanded.narrative && (
+                                  <p className="text-sm whitespace-pre-wrap">
+                                    {expanded.narrative}
+                                  </p>
+                                )}
+
+                                {expanded.facts.length > 0 && (
+                                  <div>
+                                    <h5 className="text-xs font-semibold text-muted-foreground mb-1">
+                                      Facts
+                                    </h5>
+                                    <ul className="text-sm space-y-1">
+                                      {expanded.facts.map((fact, i) => (
+                                        <li key={i} className="flex items-start gap-2">
+                                          <span className="text-primary">-</span>
+                                          {fact}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {expanded.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {expanded.tags.map((tag) => (
+                                      <Badge key={tag} variant="outline" className="text-xs">
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {expanded.links.length > 0 && (
+                                  <div>
+                                    <h5 className="text-xs font-semibold text-muted-foreground mb-1">
+                                      Sources
+                                    </h5>
+                                    <div className="space-y-1">
+                                      {expanded.links.map((link) => (
+                                        <div
+                                          key={link.id}
+                                          className="flex items-center gap-2 text-xs text-muted-foreground"
+                                        >
+                                          <LinkIcon className="h-3 w-3" />
+                                          <span>
+                                            {link.path}
+                                            {link.start_line && `:${link.start_line}`}
+                                            {link.end_line && `-${link.end_line}`}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                             )}
@@ -383,98 +582,87 @@ function MemoriesList() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label
-                htmlFor="title"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Title
-              </label>
+              <label className="text-sm font-medium">Title</label>
               <Input
-                id="title"
                 placeholder="Enter memory title..."
                 value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 autoFocus
               />
             </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="type"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Type
-              </label>
-              <Select
-                value={formData.type}
-                onValueChange={(value: Memory['type']) =>
-                  setFormData({ ...formData, type: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="note">Note</SelectItem>
-                  <SelectItem value="snippet">Snippet</SelectItem>
-                  <SelectItem value="reference">Reference</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {contexts.length > 0 && (
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label
-                  htmlFor="context"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Context (optional)
-                </label>
+                <label className="text-sm font-medium">Type</label>
                 <Select
-                  value={formData.contextId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, contextId: value })
+                  value={formData.type}
+                  onValueChange={(value: MemoryType) =>
+                    setFormData({ ...formData, type: value })
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a context" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {contexts.map((context) => (
-                      <SelectItem key={context.id} value={context.id}>
-                        {context.title}
+                    {MEMORY_TYPES.map(({ value, label }) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-            )}
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Scope</label>
+                <Select
+                  value={formData.scope}
+                  onValueChange={(value: MemoryScope) =>
+                    setFormData({ ...formData, scope: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MEMORY_SCOPES.map(({ value, label }) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <label
-                htmlFor="content"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Content
+              <label className="text-sm font-medium">
+                Confidence: {Math.round(formData.confidence * 100)}%
               </label>
-              <Textarea
-                id="content"
-                placeholder="Enter memory content..."
-                value={formData.content}
-                onChange={(e) =>
-                  setFormData({ ...formData, content: e.target.value })
+              <Slider
+                value={[formData.confidence * 100]}
+                onValueChange={([value]) =>
+                  setFormData({ ...formData, confidence: value / 100 })
                 }
+                min={0}
+                max={100}
+                step={5}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Content / Narrative</label>
+              <Textarea
+                placeholder="Enter memory content..."
+                value={formData.narrative}
+                onChange={(e) => setFormData({ ...formData, narrative: e.target.value })}
                 rows={6}
               />
             </div>
+
             <div className="space-y-2">
-              <label
-                htmlFor="tags"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Tags (comma-separated)
-              </label>
+              <label className="text-sm font-medium">Tags (comma-separated)</label>
               <Input
-                id="tags"
                 placeholder="tag1, tag2, tag3"
                 value={formData.tags.join(', ')}
                 onChange={(e) =>
@@ -490,15 +678,10 @@ function MemoriesList() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              {editingMemory ? 'Update' : 'Create'}
-            </Button>
+            <Button onClick={handleSave}>{editingMemory ? 'Update' : 'Create'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

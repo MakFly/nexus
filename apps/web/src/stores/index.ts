@@ -3,10 +3,6 @@
  * Provides convenient imports for store hooks and selectors
  */
 
-// Data store (unified local store with localStorage)
-export { useDataStore } from './dataStore'
-export type { Context, Memory, SearchResult } from './dataStore'
-
 // UI store (local UI state)
 export {
   useUIStore,

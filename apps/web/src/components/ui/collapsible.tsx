@@ -1,15 +1,53 @@
 /**
- * Simple Collapsible component
+ * Simple Collapsible component with Accordion Group support
  */
 
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+
+// Context for accordion group behavior
+const CollapsibleGroupContext = React.createContext<{
+  openId: string | null
+  setOpenId: (id: string | null) => void
+  accordion: boolean
+} | null>(null)
+
+interface CollapsibleGroupProps {
+  children: React.ReactNode
+  className?: string
+  /**
+   * If true, only one collapsible can be open at a time (accordion behavior)
+   */
+  accordion?: boolean
+}
+
+export function CollapsibleGroup({
+  children,
+  className,
+  accordion = false,
+}: CollapsibleGroupProps) {
+  const [openId, setOpenId] = React.useState<string | null>(null)
+
+  return (
+    <CollapsibleGroupContext.Provider value={{ openId, setOpenId, accordion }}>
+      <div className={className}>{children}</div>
+    </CollapsibleGroupContext.Provider>
+  )
+}
 
 interface CollapsibleProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   children: React.ReactNode
   className?: string
+  /**
+   * Unique ID for accordion behavior (required when inside CollapsibleGroup with accordion=true)
+   */
+  id?: string
+  /**
+   * If true, this collapsible ignores accordion behavior and can be opened independently
+   */
+  independent?: boolean
 }
 
 export function Collapsible({
@@ -17,14 +55,33 @@ export function Collapsible({
   onOpenChange,
   children,
   className,
+  id,
+  independent = false,
 }: CollapsibleProps) {
-  const [internalOpen, setInternalOpen] = React.useState(false)
-  const isOpen = open !== undefined ? open : internalOpen
+  const groupContext = React.useContext(CollapsibleGroupContext)
+  const [internalOpen, setInternalOpen] = React.useState(!!open)
+
+  // Determine if this collapsible is part of an accordion group
+  const isInAccordion = groupContext && groupContext.accordion && !independent
+  const isOpenInGroup = isInAccordion && id ? groupContext.openId === id : false
+
+  // Use group state if in accordion, otherwise use local or controlled state
+  const isOpen = open !== undefined
+    ? open
+    : isInAccordion
+      ? isOpenInGroup
+      : internalOpen
 
   const handleToggle = () => {
-    const newState = !isOpen
-    setInternalOpen(newState)
-    onOpenChange?.(newState)
+    if (isInAccordion && id) {
+      // Accordion behavior: toggle this ID, close others
+      groupContext.setOpenId(isOpenInGroup ? null : id)
+    } else {
+      // Independent behavior: toggle local state
+      const newState = !isOpen
+      setInternalOpen(newState)
+      onOpenChange?.(newState)
+    }
   }
 
   return (

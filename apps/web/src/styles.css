@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@import 'highlight.js/styles/github-dark.css';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
@@ -180,4 +183,254 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Command Center - Codebase Page Styles */
+
+:root {
+  --nexus-emerald: oklch(0.75 0.18 160);
+  --nexus-cyan: oklch(0.78 0.15 200);
+  --nexus-amber: oklch(0.78 0.16 80);
+  --nexus-rose: oklch(0.70 0.18 15);
+  --nexus-violet: oklch(0.68 0.18 280);
+  --nexus-surface: oklch(0.16 0.01 260);
+  --nexus-surface-elevated: oklch(0.20 0.01 260);
+  --nexus-glow: oklch(0.75 0.18 160 / 0.3);
+}
+
+.font-mono-code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Glow effects */
+.glow-emerald {
+  box-shadow: 0 0 20px oklch(0.75 0.18 160 / 0.2),
+              0 0 40px oklch(0.75 0.18 160 / 0.1),
+              inset 0 1px 0 oklch(1 0 0 / 0.05);
+}
+
+.glow-emerald-subtle {
+  box-shadow: 0 0 10px oklch(0.75 0.18 160 / 0.15);
+}
+
+.text-glow-emerald {
+  text-shadow: 0 0 10px oklch(0.75 0.18 160 / 0.5);
+}
+
+/* Scan line effect */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    oklch(0 0 0 / 0.03) 0px,
+    oklch(0 0 0 / 0.03) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
+/* Terminal cursor blink */
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: cursor-blink 1s infinite;
+}
+
+/* Staggered entry animation */
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stagger {
+  animation: slide-up-fade 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+
+/* Language color badges */
+.lang-php { --lang-color: oklch(0.65 0.18 280); }
+.lang-typescript, .lang-ts { --lang-color: oklch(0.65 0.15 230); }
+.lang-javascript, .lang-js { --lang-color: oklch(0.80 0.18 95); }
+.lang-python, .lang-py { --lang-color: oklch(0.70 0.16 220); }
+.lang-rust, .lang-rs { --lang-color: oklch(0.65 0.15 35); }
+.lang-go { --lang-color: oklch(0.72 0.15 195); }
+.lang-java { --lang-color: oklch(0.60 0.18 25); }
+.lang-css { --lang-color: oklch(0.65 0.20 265); }
+.lang-html { --lang-color: oklch(0.65 0.20 30); }
+.lang-json { --lang-color: oklch(0.70 0.12 90); }
+.lang-yaml, .lang-yml { --lang-color: oklch(0.70 0.15 45); }
+.lang-markdown, .lang-md { --lang-color: oklch(0.60 0.10 250); }
+.lang-sql { --lang-color: oklch(0.70 0.15 200); }
+.lang-shell, .lang-bash, .lang-sh { --lang-color: oklch(0.75 0.18 160); }
+.lang-default { --lang-color: oklch(0.60 0.05 260); }
+
+/* Tree connector lines */
+.tree-line {
+  position: relative;
+}
+
+.tree-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: oklch(1 0 0 / 0.08);
+}
+
+/* Custom scrollbar for command center */
+.scrollbar-command::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-command::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-command::-webkit-scrollbar-thumb {
+  background: oklch(0.75 0.18 160 / 0.3);
+  border-radius: 3px;
+}
+
+.scrollbar-command::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.75 0.18 160 / 0.5);
+}
+
+/* Noise texture overlay */
+.noise-overlay {
+  position: relative;
+}
+
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.02;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Highlight.js syntax highlighting */
+.hljs {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.hljs code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* Override github-dark theme colors for our dark background */
+.hljs {
+  color: oklch(0.9 0.01 260);
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: oklch(0.6 0.01 260);
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+  color: oklch(0.75 0.18 160);
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag .hljs-attr {
+  color: oklch(0.75 0.18 80);
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: oklch(0.75 0.15 45);
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+  color: oklch(0.75 0.18 280);
+}
+
+.hljs-type,
+.hljs-class .hljs-title {
+  color: oklch(0.75 0.18 15);
+}
+
+.hljs-tag,
+.hljs-name,
+.hljs-attribute {
+  color: oklch(0.65 0.15 200);
+}
+
+.hljs-regexp,
+.hljs-link {
+  color: oklch(0.75 0.18 220);
+}
+
+.hljs-symbol,
+.hljs-bullet {
+  color: oklch(0.75 0.15 250);
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+  color: oklch(0.75 0.18 30);
+}
+
+.hljs-meta {
+  color: oklch(0.6 0.12 260);
+}
+
+.hljs-deletion {
+  background: oklch(0.70 0.18 15 / 0.2);
+}
+
+.hljs-addition {
+  background: oklch(0.75 0.18 160 / 0.2);
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
 }

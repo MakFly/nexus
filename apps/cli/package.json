@@ -1,0 +1,21 @@
+{
+  "name": "@nexus/cli",
+  "version": "0.0.1",
+  "description": "Nexus CLI - Command-line interface for Nexus",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "nexus": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
+    "watch": "bun build ./src/index.ts --outdir ./dist --target bun --watch",
+    "start": "bun run ./src/index.ts"
+  },
+  "dependencies": {
+    "@nexus/storage": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

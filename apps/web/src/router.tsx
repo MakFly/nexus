@@ -9,6 +9,8 @@ export const getRouter = () => {
     routeTree,
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    // Disable React StrictMode in development
+    reactStrictMode: false,
   })
 
   return router

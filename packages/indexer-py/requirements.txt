@@ -1,0 +1,3 @@
+# Nexus Indexer Python - Dependencies
+# Minimal: only stdlib used (sqlite3, asyncio, pathlib)
+# No external dependencies required!

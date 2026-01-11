@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Link } from '@tanstack/react-router'
-import { CheckIcon, ChevronRightIcon, LogOutIcon, PlusIcon } from 'lucide-react'
+import { CheckIcon, ChevronRightIcon, LogOutIcon, PlusIcon, GithubIcon } from 'lucide-react'
 
 import {
   Avatar,
@@ -63,8 +63,8 @@ export function NavUser({
             >
               <Avatar className="size-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">
-                  {initials || 'U'}
+                <AvatarFallback className="rounded-lg bg-gradient-to-br from-gray-700 to-gray-900">
+                  <GithubIcon className="size-4 text-white" />
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -86,8 +86,8 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="size-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">
-                    {initials || 'U'}
+                  <AvatarFallback className="rounded-lg bg-gradient-to-br from-gray-700 to-gray-900">
+                    <GithubIcon className="size-4 text-white" />
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -101,9 +101,9 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link to="/contexts" className="cursor-pointer">
+                <Link to="/memories" className="cursor-pointer">
                   <PlusIcon />
-                  <span>New Context</span>
+                  <span>New Memory</span>
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

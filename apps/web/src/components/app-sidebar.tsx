@@ -8,6 +8,7 @@ import type { Icon } from "@tabler/icons-react"
 import { NavMain } from "@/components/nav-main"
 import { NavDocuments } from "@/components/nav-documents"
 import { NavUser } from "@/components/nav-user"
+import { StatusCard } from "@/components/status-card"
 import {
   Sidebar,
   SidebarContent,
@@ -20,19 +21,21 @@ import {
 import {
   BarChart3Icon,
   BrainIcon,
-  FolderKanbanIcon,
   LayoutDashboardIcon,
   SearchIcon,
   SparklesIcon,
   NetworkIcon,
   FolderCodeIcon,
+  HelpCircleIcon,
+  SettingsIcon,
+  GitCompareArrowsIcon,
 } from "lucide-react"
 
 const data = {
   user: {
     name: "nexus",
     email: "contact@m7academy.com",
-    avatar: "/avatars/m7.jpg",
+    avatar: "/avatars/nexus-github.png",
   },
   navMain: [
     {
@@ -47,11 +50,6 @@ const data = {
     },
   ],
   content: [
-    {
-      name: "Contexts",
-      url: "/contexts",
-      icon: FolderKanbanIcon,
-    },
     {
       name: "Memories",
       url: "/memories",
@@ -82,6 +80,23 @@ const data = {
       icon: BarChart3Icon,
     },
   ],
+  footer: [
+    {
+      name: "Settings",
+      url: "/settings",
+      icon: SettingsIcon,
+    },
+    {
+      name: "Help",
+      url: "/help",
+      icon: HelpCircleIcon,
+    },
+    {
+      name: "Changelog",
+      url: "/changelog",
+      icon: GitCompareArrowsIcon,
+    },
+  ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -109,6 +124,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavDocuments items={data.analytics} title="Analytics" />
       </SidebarContent>
       <SidebarFooter>
+        <NavDocuments items={data.footer} title="" />
+        <StatusCard />
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>

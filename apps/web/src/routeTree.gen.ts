@@ -11,11 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StatsIndexRouteImport } from './routes/stats.index'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as SearchIndexRouteImport } from './routes/search.index'
 import { Route as RelationshipsIndexRouteImport } from './routes/relationships.index'
 import { Route as MemoriesIndexRouteImport } from './routes/memories.index'
-import { Route as ContextsIndexRouteImport } from './routes/contexts/index'
+import { Route as LearningIndexRouteImport } from './routes/learning.index'
+import { Route as HelpIndexRouteImport } from './routes/help.index'
 import { Route as CodebaseIndexRouteImport } from './routes/codebase.index'
+import { Route as ChangelogIndexRouteImport } from './routes/changelog.index'
 import { Route as AutomationIndexRouteImport } from './routes/automation.index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -26,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const StatsIndexRoute = StatsIndexRouteImport.update({
   id: '/stats/',
   path: '/stats/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchIndexRoute = SearchIndexRouteImport.update({
@@ -43,14 +51,24 @@ const MemoriesIndexRoute = MemoriesIndexRouteImport.update({
   path: '/memories/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ContextsIndexRoute = ContextsIndexRouteImport.update({
-  id: '/contexts/',
-  path: '/contexts/',
+const LearningIndexRoute = LearningIndexRouteImport.update({
+  id: '/learning/',
+  path: '/learning/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpIndexRoute = HelpIndexRouteImport.update({
+  id: '/help/',
+  path: '/help/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CodebaseIndexRoute = CodebaseIndexRouteImport.update({
   id: '/codebase/',
   path: '/codebase/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogIndexRoute = ChangelogIndexRouteImport.update({
+  id: '/changelog/',
+  path: '/changelog/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AutomationIndexRoute = AutomationIndexRouteImport.update({
@@ -62,32 +80,41 @@ const AutomationIndexRoute = AutomationIndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/automation': typeof AutomationIndexRoute
+  '/changelog': typeof ChangelogIndexRoute
   '/codebase': typeof CodebaseIndexRoute
-  '/contexts': typeof ContextsIndexRoute
+  '/help': typeof HelpIndexRoute
+  '/learning': typeof LearningIndexRoute
   '/memories': typeof MemoriesIndexRoute
   '/relationships': typeof RelationshipsIndexRoute
   '/search': typeof SearchIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/stats': typeof StatsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/automation': typeof AutomationIndexRoute
+  '/changelog': typeof ChangelogIndexRoute
   '/codebase': typeof CodebaseIndexRoute
-  '/contexts': typeof ContextsIndexRoute
+  '/help': typeof HelpIndexRoute
+  '/learning': typeof LearningIndexRoute
   '/memories': typeof MemoriesIndexRoute
   '/relationships': typeof RelationshipsIndexRoute
   '/search': typeof SearchIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/stats': typeof StatsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/automation/': typeof AutomationIndexRoute
+  '/changelog/': typeof ChangelogIndexRoute
   '/codebase/': typeof CodebaseIndexRoute
-  '/contexts/': typeof ContextsIndexRoute
+  '/help/': typeof HelpIndexRoute
+  '/learning/': typeof LearningIndexRoute
   '/memories/': typeof MemoriesIndexRoute
   '/relationships/': typeof RelationshipsIndexRoute
   '/search/': typeof SearchIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/stats/': typeof StatsIndexRoute
 }
 export interface FileRouteTypes {
@@ -95,42 +122,54 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/automation'
+    | '/changelog'
     | '/codebase'
-    | '/contexts'
+    | '/help'
+    | '/learning'
     | '/memories'
     | '/relationships'
     | '/search'
+    | '/settings'
     | '/stats'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/automation'
+    | '/changelog'
     | '/codebase'
-    | '/contexts'
+    | '/help'
+    | '/learning'
     | '/memories'
     | '/relationships'
     | '/search'
+    | '/settings'
     | '/stats'
   id:
     | '__root__'
     | '/'
     | '/automation/'
+    | '/changelog/'
     | '/codebase/'
-    | '/contexts/'
+    | '/help/'
+    | '/learning/'
     | '/memories/'
     | '/relationships/'
     | '/search/'
+    | '/settings/'
     | '/stats/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AutomationIndexRoute: typeof AutomationIndexRoute
+  ChangelogIndexRoute: typeof ChangelogIndexRoute
   CodebaseIndexRoute: typeof CodebaseIndexRoute
-  ContextsIndexRoute: typeof ContextsIndexRoute
+  HelpIndexRoute: typeof HelpIndexRoute
+  LearningIndexRoute: typeof LearningIndexRoute
   MemoriesIndexRoute: typeof MemoriesIndexRoute
   RelationshipsIndexRoute: typeof RelationshipsIndexRoute
   SearchIndexRoute: typeof SearchIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
   StatsIndexRoute: typeof StatsIndexRoute
 }
 
@@ -148,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/stats'
       fullPath: '/stats'
       preLoaderRoute: typeof StatsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search/': {
@@ -171,11 +217,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MemoriesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/contexts/': {
-      id: '/contexts/'
-      path: '/contexts'
-      fullPath: '/contexts'
-      preLoaderRoute: typeof ContextsIndexRouteImport
+    '/learning/': {
+      id: '/learning/'
+      path: '/learning'
+      fullPath: '/learning'
+      preLoaderRoute: typeof LearningIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help/': {
+      id: '/help/'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/codebase/': {
@@ -183,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/codebase'
       fullPath: '/codebase'
       preLoaderRoute: typeof CodebaseIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog/': {
+      id: '/changelog/'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/automation/': {
@@ -198,11 +258,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AutomationIndexRoute: AutomationIndexRoute,
+  ChangelogIndexRoute: ChangelogIndexRoute,
   CodebaseIndexRoute: CodebaseIndexRoute,
-  ContextsIndexRoute: ContextsIndexRoute,
+  HelpIndexRoute: HelpIndexRoute,
+  LearningIndexRoute: LearningIndexRoute,
   MemoriesIndexRoute: MemoriesIndexRoute,
   RelationshipsIndexRoute: RelationshipsIndexRoute,
   SearchIndexRoute: SearchIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
   StatsIndexRoute: StatsIndexRoute,
 }
 export const routeTree = rootRouteImport
