@@ -2,12 +2,14 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useNavigate, useLocation } from '@tanstack/react-router'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, RefreshCw } from 'lucide-react'
 import * as React from 'react'
+import { useRefresh } from '@/contexts/refresh-context'
 
 export function SiteHeader() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { triggerRefresh, isRefreshing } = useRefresh()
   const [currentPath, setCurrentPath] = React.useState<string[]>([])
 
   React.useEffect(() => {
@@ -80,6 +82,15 @@ export function SiteHeader() {
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={triggerRefresh}
+            disabled={isRefreshing}
+            title="Actualiser les données"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
       </div>
     </header>

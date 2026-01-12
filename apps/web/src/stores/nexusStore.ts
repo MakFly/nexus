@@ -324,7 +324,7 @@ interface NexusStore {
   }>
 }
 
-const DEFAULT_API_URL = '/api'
+const DEFAULT_API_URL = 'http://localhost:3001'
 
 export const useNexusStore = create<NexusStore>()(
   persist(

@@ -1,10 +1,11 @@
 /**
  * Capture Routes - Nexus API
  * Handles auto-capture from Claude Code hooks
- * Provides endpoints for observation collection and distillation
+ * Provides endpoints for observation collection, distillation, and SSE streaming
  */
 
 import { Hono } from 'hono';
+import { streamSSE } from 'hono/streaming';
 import type { Database } from '@nexus/storage';
 
 interface CapturePayload {
@@ -21,10 +22,135 @@ interface DistillRequest {
   session_id: string;
 }
 
+interface HookObservation {
+  id: number;
+  session_id: string;
+  hook_name: string;
+  payload: Record<string, any>;
+  timestamp: number;
+  created_at?: number;
+}
+
 type GetDb = () => Promise<Database>;
+
+// SSE subscriber management
+type SseSubscriber = (data: HookObservation) => void;
+const sseSubscribers = new Set<SseSubscriber>();
+
+function notifySubscribers(observation: HookObservation) {
+  for (const subscriber of sseSubscribers) {
+    try {
+      subscriber(observation);
+    } catch {
+      sseSubscribers.delete(subscriber);
+    }
+  }
+}
 
 export function createCaptureRoutes(getDb: GetDb) {
   const app = new Hono();
+
+  // ============================================================
+  // GET /capture/stream - SSE stream for real-time hook logs
+  // ============================================================
+  app.get('/stream', async (c) => {
+    return streamSSE(c, async (stream) => {
+      console.log('[SSE] Client connected');
+
+      // Send initial connection event
+      await stream.writeSSE({
+        event: 'connected',
+        data: JSON.stringify({
+          message: 'Connected to hook stream',
+          timestamp: Date.now(),
+          subscribers: sseSubscribers.size + 1,
+        }),
+      });
+
+      // Subscribe to new observations
+      const subscriber: SseSubscriber = async (observation) => {
+        try {
+          await stream.writeSSE({
+            event: 'hook',
+            data: JSON.stringify(observation),
+          });
+        } catch {
+          sseSubscribers.delete(subscriber);
+        }
+      };
+
+      sseSubscribers.add(subscriber);
+      console.log(`[SSE] Subscribers: ${sseSubscribers.size}`);
+
+      // Heartbeat every 30s
+      const heartbeat = setInterval(async () => {
+        try {
+          await stream.writeSSE({
+            event: 'heartbeat',
+            data: JSON.stringify({ timestamp: Date.now() }),
+          });
+        } catch {
+          clearInterval(heartbeat);
+          sseSubscribers.delete(subscriber);
+        }
+      }, 30000);
+
+      // Cleanup on disconnect
+      stream.onAbort(() => {
+        console.log('[SSE] Client disconnected');
+        clearInterval(heartbeat);
+        sseSubscribers.delete(subscriber);
+      });
+
+      // Keep stream open indefinitely
+      await new Promise(() => {});
+    });
+  });
+
+  // ============================================================
+  // GET /capture/history - Get recent observations with pagination
+  // ============================================================
+  app.get('/history', async (c) => {
+    const db = await getDb();
+    const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);
+    const offset = parseInt(c.req.query('offset') || '0');
+    const session_id = c.req.query('session_id');
+
+    try {
+      const params: any[] = [];
+      let whereClause = '';
+
+      if (session_id) {
+        whereClause = 'WHERE session_id = ?';
+        params.push(session_id);
+      }
+
+      const observations = db.query(`
+        SELECT * FROM hook_observations
+        ${whereClause}
+        ORDER BY timestamp DESC, id DESC
+        LIMIT ? OFFSET ?
+      `, ...params, limit, offset);
+
+      const countResult = db.queryOne<{ count: number }>(
+        `SELECT COUNT(*) as count FROM hook_observations ${whereClause}`,
+        ...params
+      );
+
+      return c.json({
+        observations: observations.map((o: any) => ({
+          ...o,
+          payload: typeof o.payload === 'string' ? JSON.parse(o.payload) : o.payload,
+        })),
+        total: countResult?.count || 0,
+        limit,
+        offset,
+      });
+    } catch (e) {
+      console.error('[History] Error:', e);
+      return c.json({ error: 'Failed to fetch history' }, 500);
+    }
+  });
 
   // ============================================================
   // POST /capture - Capture single observation
@@ -38,6 +164,7 @@ export function createCaptureRoutes(getDb: GetDb) {
     }
 
     try {
+      const timestamp = payload.timestamp || Date.now();
       const result = db.run(`
         INSERT INTO hook_observations (session_id, hook_name, payload, timestamp)
         VALUES (?, ?, ?, ?)
@@ -45,8 +172,21 @@ export function createCaptureRoutes(getDb: GetDb) {
         session_id,
         hook_name,
         JSON.stringify(payload),
-        payload.timestamp || Math.floor(Date.now() / 1000)
+        timestamp
       );
+
+      const observation: HookObservation = {
+        id: Number(result.lastInsertRowid),
+        session_id,
+        hook_name,
+        payload,
+        timestamp,
+        created_at: Date.now(),
+      };
+
+      // Notify SSE subscribers
+      notifySubscribers(observation);
+      console.log(`[Capture] ${hook_name} from ${session_id} (${sseSubscribers.size} subscribers)`);
 
       return c.json({
         id: result.lastInsertRowid,
@@ -76,12 +216,22 @@ export function createCaptureRoutes(getDb: GetDb) {
       `);
 
       for (const obs of observations) {
-        stmt.run(
+        const timestamp = obs.payload.timestamp || Date.now();
+        const result = stmt.run(
           obs.session_id,
           obs.hook_name,
           JSON.stringify(obs.payload),
-          obs.payload.timestamp || Math.floor(Date.now() / 1000)
+          timestamp
         );
+
+        // Notify SSE subscribers for each observation
+        notifySubscribers({
+          id: Number(result.lastInsertRowid),
+          session_id: obs.session_id,
+          hook_name: obs.hook_name,
+          payload: obs.payload,
+          timestamp,
+        });
       }
 
       return c.json({
@@ -227,7 +377,10 @@ export function createCaptureRoutes(getDb: GetDb) {
 
       return c.json({
         session_id: sessionId,
-        observations,
+        observations: observations.map((o: any) => ({
+          ...o,
+          payload: typeof o.payload === 'string' ? JSON.parse(o.payload) : o.payload,
+        })),
         count: observations.length,
       });
     } catch (e) {

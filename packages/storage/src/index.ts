@@ -1,6 +1,7 @@
 /**
  * @nexus/storage - SQLite database layer with migrations
  * Sprint 0: Foundation
+ * Sprint 9: Federation and Multi-Project support
  */
 
 // Types
@@ -14,3 +15,23 @@ export { BaseRepository as Repository, createRepository } from './crud.js';
 
 // Hash utilities (async API)
 export { hash, hashSync, verify, hashContent, initHash } from './hash.js';
+
+// Federation (Sprint 9)
+export {
+  getGlobalDb,
+  getProjectDb,
+  getProjectDbPath,
+  ensureNexusDirs,
+  getFederationQuery,
+  FederationQuery,
+  type FederationQueryOptions,
+  type FederatedResult
+} from './federation.js';
+
+// Project Manager (Sprint 9)
+export {
+  getProjectManager,
+  ProjectManager,
+  type ProjectMeta,
+  type CreateProjectOptions
+} from './project-manager.js';

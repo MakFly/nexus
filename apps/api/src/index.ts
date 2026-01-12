@@ -47,6 +47,7 @@ import { createCaptureRoutes } from './routes/capture.js';
 import { createContextRoutes } from './routes/context.js';
 import { createWatcherRoutes } from './routes/watcher.js';
 import { createSettingsRoutes } from './routes/settings.js';
+import { createSessionsRoutes } from './routes/sessions.js';
 
 // Embeddings initialization flag
 let embeddingsInitialized = false;
@@ -94,6 +95,7 @@ app.route('/capture', createCaptureRoutes(getDb as any));
 app.route('/context', createContextRoutes(getDb as any));
 app.route('/watcher', createWatcherRoutes(getDb as any));
 app.route('/settings', createSettingsRoutes(getDb as any));
+app.route('/sessions', createSessionsRoutes());
 
 // Stats route
 app.get('/stats', async (c) => {
@@ -379,6 +381,8 @@ console.log(`  POST /watcher/pause    - Pause file watcher`);
 console.log(`  POST /watcher/resume   - Resume file watcher`);
 console.log(`  GET  /watcher/status   - Get watcher status`);
 console.log(`  GET  /watcher/queue    - Get queued files`);
+console.log(`  GET  /sessions         - CLI sessions (Claude, Codex, Gemini)`);
+console.log(`  GET  /sessions/summary - Sessions summary`);
 console.log(`[API] Semantic search: ${embeddingsInitialized ? 'enabled (Mistral)' : 'disabled (set MISTRAL_API_KEY)'}`);
 console.log(`[API] Auto-capture: enabled (hooks compatible)`);
 console.log(`[API] File watcher: enabled (chokidar)`);

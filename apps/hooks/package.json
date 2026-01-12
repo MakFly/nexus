@@ -1,0 +1,14 @@
+{
+  "name": "@nexus/hooks",
+  "version": "0.0.1",
+  "description": "Claude Code lifecycle hooks for Nexus",
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/session-start.ts src/pre-tool-use.ts src/post-tool-use.ts src/stop.ts src/session-end.ts --outdir dist --target bun",
+    "setup": "bun run install.ts",
+    "setup:uninstall": "bun run install.ts -u"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

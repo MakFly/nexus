@@ -7,6 +7,7 @@ import {
   type MemoryType,
   type MemoryScope,
 } from '@/stores/nexusStore'
+import { usePageRefresh } from '@/contexts/refresh-context'
 import {
   BrainIcon,
   CodeIcon,
@@ -53,6 +54,7 @@ import {
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { MemoriesSkeleton } from '@/components/ui/skeleton'
+import { Markdown } from '@/components/ui/code-block'
 
 export const Route = createFileRoute('/memories/')({
   component: MemoriesList,
@@ -130,6 +132,9 @@ function MemoriesList() {
       setLoading(false)
     }
   }, [recallMemories, searchQuery, filterType, filterScope])
+
+  // Register refresh callback for header button
+  usePageRefresh(loadMemories)
 
   // Initial load + filter changes (unified effect) - connection checked by root loader
   useEffect(() => {
@@ -500,9 +505,9 @@ function MemoriesList() {
                                 </div>
 
                                 {expanded.narrative && (
-                                  <p className="text-sm whitespace-pre-wrap">
-                                    {expanded.narrative}
-                                  </p>
+                                  <div className="text-sm">
+                                    <Markdown content={expanded.narrative} />
+                                  </div>
                                 )}
 
                                 {expanded.facts.length > 0 && (

@@ -44,7 +44,7 @@ interface SettingsState {
 }
 
 const defaultConnection: ConnectionSettings = {
-  apiBaseUrl: '/api',
+  apiBaseUrl: 'http://localhost:3001',
   healthCheckInterval: 15000,
   maxRetryAttempts: 3,
   retryDelay: 2000,

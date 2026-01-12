@@ -14,7 +14,7 @@
     },
     "apps/api": {
       "name": "@nexus/api",
-      "version": "0.1.0",
+      "version": "0.0.1",
       "dependencies": {
         "@nexus/core": "workspace:*",
         "@nexus/search": "workspace:*",
@@ -29,7 +29,7 @@
     },
     "apps/cli": {
       "name": "@nexus/cli",
-      "version": "0.1.0",
+      "version": "0.0.1",
       "bin": {
         "nexus": "./dist/index.js",
       },
@@ -40,9 +40,22 @@
         "@types/bun": "latest",
       },
     },
+    "apps/hooks": {
+      "name": "@nexus/hooks",
+      "version": "0.0.1",
+      "dependencies": {
+        "@nexus/core": "workspace:*",
+        "@nexus/storage": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^20.10.0",
+        "bun-types": "^1.3.5",
+        "typescript": "^5.3.0",
+      },
+    },
     "apps/mcp-server": {
       "name": "@nexus/mcp-server",
-      "version": "0.1.0",
+      "version": "0.0.1",
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.12.1",
         "@nexus/core": "workspace:*",
@@ -54,6 +67,7 @@
     },
     "apps/web": {
       "name": "free-context-dashboard",
+      "version": "0.0.1",
       "dependencies": {
         "@base-ui/react": "^1.0.0",
         "@fontsource-variable/inter": "^5.2.8",
@@ -116,7 +130,7 @@
     },
     "packages/core": {
       "name": "@nexus/core",
-      "version": "0.1.0",
+      "version": "0.0.1",
       "dependencies": {
         "@nexus/search": "workspace:*",
         "@nexus/storage": "workspace:*",
@@ -128,7 +142,7 @@
     },
     "packages/search": {
       "name": "@nexus/search",
-      "version": "0.1.0",
+      "version": "0.0.1",
       "devDependencies": {
         "@types/bun": "latest",
         "@types/node": "^22.10.2",
@@ -137,7 +151,7 @@
     },
     "packages/storage": {
       "name": "@nexus/storage",
-      "version": "0.1.0",
+      "version": "0.0.1",
       "dependencies": {
         "xxhash-wasm": "^1.0.2",
       },
@@ -380,6 +394,8 @@
     "@nexus/cli": ["@nexus/cli@workspace:apps/cli"],
 
     "@nexus/core": ["@nexus/core@workspace:packages/core"],
+
+    "@nexus/hooks": ["@nexus/hooks@workspace:apps/hooks"],
 
     "@nexus/mcp-server": ["@nexus/mcp-server@workspace:apps/mcp-server"],
 
@@ -2434,6 +2450,8 @@
     "@eslint/eslintrc/espree": ["espree@10.4.0", "", { "dependencies": { "acorn": "^8.15.0", "acorn-jsx": "^5.3.2", "eslint-visitor-keys": "^4.2.1" } }, "sha512-j6PAQ2uUr79PZhBjP5C5fhl8e39FmRnOjsD5lGnWrFU8i2G776tBK7+nP8KuQUTTyAZUwfQqXAgrVH5MbH9CYQ=="],
 
     "@eslint/eslintrc/globals": ["globals@14.0.0", "", {}, "sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ=="],
+
+    "@nexus/hooks/@types/node": ["@types/node@20.19.28", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-VyKBr25BuFDzBFCK5sUM6ZXiWfqgCTwTAOK8qzGV/m9FCirXYDlmczJ+d5dXBAQALGCdRRdbteKYfJ84NGEusw=="],
 
     "@rollup/pluginutils/estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
 

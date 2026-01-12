@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StatsIndexRouteImport } from './routes/stats.index'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
+import { Route as SessionsIndexRouteImport } from './routes/sessions.index'
 import { Route as SearchIndexRouteImport } from './routes/search.index'
 import { Route as RelationshipsIndexRouteImport } from './routes/relationships.index'
 import { Route as MemoriesIndexRouteImport } from './routes/memories.index'
+import { Route as LogsIndexRouteImport } from './routes/logs.index'
 import { Route as LearningIndexRouteImport } from './routes/learning.index'
 import { Route as HelpIndexRouteImport } from './routes/help.index'
 import { Route as CodebaseIndexRouteImport } from './routes/codebase.index'
@@ -36,6 +38,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SessionsIndexRoute = SessionsIndexRouteImport.update({
+  id: '/sessions/',
+  path: '/sessions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchIndexRoute = SearchIndexRouteImport.update({
   id: '/search/',
   path: '/search/',
@@ -49,6 +56,11 @@ const RelationshipsIndexRoute = RelationshipsIndexRouteImport.update({
 const MemoriesIndexRoute = MemoriesIndexRouteImport.update({
   id: '/memories/',
   path: '/memories/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogsIndexRoute = LogsIndexRouteImport.update({
+  id: '/logs/',
+  path: '/logs/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LearningIndexRoute = LearningIndexRouteImport.update({
@@ -84,9 +96,11 @@ export interface FileRoutesByFullPath {
   '/codebase': typeof CodebaseIndexRoute
   '/help': typeof HelpIndexRoute
   '/learning': typeof LearningIndexRoute
+  '/logs': typeof LogsIndexRoute
   '/memories': typeof MemoriesIndexRoute
   '/relationships': typeof RelationshipsIndexRoute
   '/search': typeof SearchIndexRoute
+  '/sessions': typeof SessionsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/stats': typeof StatsIndexRoute
 }
@@ -97,9 +111,11 @@ export interface FileRoutesByTo {
   '/codebase': typeof CodebaseIndexRoute
   '/help': typeof HelpIndexRoute
   '/learning': typeof LearningIndexRoute
+  '/logs': typeof LogsIndexRoute
   '/memories': typeof MemoriesIndexRoute
   '/relationships': typeof RelationshipsIndexRoute
   '/search': typeof SearchIndexRoute
+  '/sessions': typeof SessionsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/stats': typeof StatsIndexRoute
 }
@@ -111,9 +127,11 @@ export interface FileRoutesById {
   '/codebase/': typeof CodebaseIndexRoute
   '/help/': typeof HelpIndexRoute
   '/learning/': typeof LearningIndexRoute
+  '/logs/': typeof LogsIndexRoute
   '/memories/': typeof MemoriesIndexRoute
   '/relationships/': typeof RelationshipsIndexRoute
   '/search/': typeof SearchIndexRoute
+  '/sessions/': typeof SessionsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/stats/': typeof StatsIndexRoute
 }
@@ -126,9 +144,11 @@ export interface FileRouteTypes {
     | '/codebase'
     | '/help'
     | '/learning'
+    | '/logs'
     | '/memories'
     | '/relationships'
     | '/search'
+    | '/sessions'
     | '/settings'
     | '/stats'
   fileRoutesByTo: FileRoutesByTo
@@ -139,9 +159,11 @@ export interface FileRouteTypes {
     | '/codebase'
     | '/help'
     | '/learning'
+    | '/logs'
     | '/memories'
     | '/relationships'
     | '/search'
+    | '/sessions'
     | '/settings'
     | '/stats'
   id:
@@ -152,9 +174,11 @@ export interface FileRouteTypes {
     | '/codebase/'
     | '/help/'
     | '/learning/'
+    | '/logs/'
     | '/memories/'
     | '/relationships/'
     | '/search/'
+    | '/sessions/'
     | '/settings/'
     | '/stats/'
   fileRoutesById: FileRoutesById
@@ -166,9 +190,11 @@ export interface RootRouteChildren {
   CodebaseIndexRoute: typeof CodebaseIndexRoute
   HelpIndexRoute: typeof HelpIndexRoute
   LearningIndexRoute: typeof LearningIndexRoute
+  LogsIndexRoute: typeof LogsIndexRoute
   MemoriesIndexRoute: typeof MemoriesIndexRoute
   RelationshipsIndexRoute: typeof RelationshipsIndexRoute
   SearchIndexRoute: typeof SearchIndexRoute
+  SessionsIndexRoute: typeof SessionsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   StatsIndexRoute: typeof StatsIndexRoute
 }
@@ -196,6 +222,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sessions/': {
+      id: '/sessions/'
+      path: '/sessions'
+      fullPath: '/sessions'
+      preLoaderRoute: typeof SessionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search/': {
       id: '/search/'
       path: '/search'
@@ -215,6 +248,13 @@ declare module '@tanstack/react-router' {
       path: '/memories'
       fullPath: '/memories'
       preLoaderRoute: typeof MemoriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs/': {
+      id: '/logs/'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof LogsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/learning/': {
@@ -262,9 +302,11 @@ const rootRouteChildren: RootRouteChildren = {
   CodebaseIndexRoute: CodebaseIndexRoute,
   HelpIndexRoute: HelpIndexRoute,
   LearningIndexRoute: LearningIndexRoute,
+  LogsIndexRoute: LogsIndexRoute,
   MemoriesIndexRoute: MemoriesIndexRoute,
   RelationshipsIndexRoute: RelationshipsIndexRoute,
   SearchIndexRoute: SearchIndexRoute,
+  SessionsIndexRoute: SessionsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   StatsIndexRoute: StatsIndexRoute,
 }

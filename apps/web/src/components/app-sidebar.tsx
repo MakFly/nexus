@@ -29,12 +29,14 @@ import {
   HelpCircleIcon,
   SettingsIcon,
   GitCompareArrowsIcon,
+  MonitorIcon,
+  ScrollTextIcon,
 } from "lucide-react"
 
 const data = {
   user: {
     name: "nexus",
-    email: "contact@m7academy.com",
+    email: "contact@acme.fr",
     avatar: "/avatars/nexus-github.png",
   },
   navMain: [
@@ -74,6 +76,16 @@ const data = {
     },
   ],
   analytics: [
+    {
+      name: "Sessions",
+      url: "/sessions",
+      icon: MonitorIcon,
+    },
+    {
+      name: "Logs",
+      url: "/logs",
+      icon: ScrollTextIcon,
+    },
     {
       name: "Stats",
       url: "/stats",

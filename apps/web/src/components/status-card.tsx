@@ -19,50 +19,56 @@ function StatusIndicator({ label, isConnected, isLoading, icon }: StatusIndicato
         {icon}
         <span>{label}</span>
       </div>
-      <div className="flex items-center gap-1.5">
-        {isLoading ? (
-          <div className="size-2 rounded-full bg-yellow-500 animate-pulse" />
-        ) : (
+      {isLoading ? (
+        <div className="h-4 w-8 rounded bg-muted animate-pulse" />
+      ) : (
+        <div className="flex items-center gap-1.5">
           <div
             className={cn(
               "size-2 rounded-full",
               isConnected ? "bg-emerald-500" : "bg-red-500"
             )}
           />
-        )}
-        <span className={cn(
-          "text-xs font-medium",
-          isLoading ? "text-yellow-500" : isConnected ? "text-emerald-500" : "text-red-500"
-        )}>
-          {isLoading ? "..." : isConnected ? "OK" : "OFF"}
-        </span>
-      </div>
+          <span className={cn(
+            "text-xs font-medium",
+            isConnected ? "text-emerald-500" : "text-red-500"
+          )}>
+            {isConnected ? "OK" : "OFF"}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
 
 export function StatusCard() {
-  const { isConnected, checkConnection } = useNexusStore()
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [mcpStatus, setMcpStatus] = React.useState<boolean | null>(null)
+  const { isConnected, checkConnection, lastConnectionCheck } = useNexusStore()
+
+  // Start loading if no recent check
+  const needsCheck = !lastConnectionCheck || Date.now() - lastConnectionCheck > 30000
+  const [isLoading, setIsLoading] = React.useState(needsCheck)
+  const [mcpStatus, setMcpStatus] = React.useState<boolean | null>(needsCheck ? null : isConnected)
+  const hasCheckedRef = React.useRef(false)
 
   React.useEffect(() => {
-    const check = async () => {
-      setIsLoading(true)
-      try {
-        const apiOk = await checkConnection(true)
-        // MCP depends on API - if API is up, MCP can connect
+    // Only check once if needed
+    if (needsCheck && !hasCheckedRef.current) {
+      hasCheckedRef.current = true
+      checkConnection().then((apiOk) => {
         setMcpStatus(apiOk)
-      } finally {
         setIsLoading(false)
-      }
+      }).catch(() => {
+        setIsLoading(false)
+      })
     }
+  }, []) // Empty deps - only run on mount
 
-    check()
-    // Recheck every 30 seconds
-    const interval = setInterval(check, 30000)
-    return () => clearInterval(interval)
-  }, [checkConnection])
+  // Sync MCP status with API connection state
+  React.useEffect(() => {
+    if (!isLoading) {
+      setMcpStatus(isConnected)
+    }
+  }, [isConnected, isLoading])
 
   return (
     <div className="mx-2 mb-2 rounded-lg border border-sidebar-border bg-sidebar-accent/50 p-3">

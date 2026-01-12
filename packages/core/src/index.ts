@@ -9,9 +9,8 @@ export { Database, createDatabase, getDatabase, closeDatabase } from '@nexus/sto
 export { Repository, createRepository } from '@nexus/storage';
 export { hash, hashSync, verify, hashContent, initHash } from '@nexus/storage';
 
-// Re-export search (Meilisearch)
+// Re-export search (FTS5 + Chroma Hybrid)
 export type {
-  SearchConfig,
   ChunkDocument,
   SearchOptions,
   SearchResult,
@@ -19,14 +18,11 @@ export type {
 } from '@nexus/search';
 export {
   initSearch,
-  indexChunk,
   indexChunks,
   deleteChunksForFile,
   search,
-  getChunk,
   clearIndex,
   getIndexStats,
-  waitForTask,
   makeChunkId,
   formatCompact
 } from '@nexus/search';
@@ -154,4 +150,51 @@ export interface Pattern {
   fail_count: number;
   created_at: number;
   updated_at: number;
+}
+
+// Re-export crypto utilities
+export {
+  encryptApiKey,
+  decryptApiKey,
+  maskApiKey,
+  maskEncryptedApiKey,
+  isEncrypted,
+  encryptSettingValue,
+  decryptSettingValue
+} from './crypto.js';
+
+// Re-export compression utilities
+export {
+  compress,
+  quickCompress,
+  compressWithLLM,
+  compressAlgorithmic,
+  type CompressionMode,
+  type CompressorConfig,
+  type CompressionResult
+} from './compressor/index.js';
+
+// Token counting utility
+export function countTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+// Settings types
+export type SettingCategory = 'general' | 'compression' | 'search' | 'ui' | 'api';
+
+export interface Setting {
+  key: string;
+  value: string;
+  encrypted: number;
+  category: SettingCategory;
+  updated_at: string;
+}
+
+export type CompressionProvider = 'anthropic' | 'mistral' | 'openai' | 'ollama';
+
+export interface CompressionSettings {
+  mode: 'auto' | 'llm' | 'algo';
+  provider: CompressionProvider;
+  maxTokens: number;
+  llmModel: string;
 }

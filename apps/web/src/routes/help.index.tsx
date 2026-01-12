@@ -512,55 +512,276 @@ function HelpPage() {
             </div>
           </HelpCard>
 
-          {/* Quick Start */}
+          {/* Installation Complète */}
           <HelpCard
-            id="quick-start"
-            icon={Zap}
+            id="installation"
+            icon={Server}
             iconColor="bg-green-500/10 text-green-500"
-            title="Quick Start"
-            subtitle="Démarrage en 3 étapes"
+            title="Installation Complète"
+            subtitle="Guide A à Z pour première installation"
+            className="col-span-1 md:col-span-2 xl:col-span-3"
           >
-            <div className="space-y-3">
+            <div className="space-y-6">
+              {/* Prérequis */}
+              <div>
+                <h4 className="font-semibold text-sm flex items-center gap-2 mb-3">
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                  Prérequis
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <code className="font-semibold">Bun 1.0+</code>
+                    <p className="text-muted-foreground mt-1">Runtime JavaScript rapide</p>
+                    <code className="block bg-muted p-1 rounded mt-2">curl -fsSL https://bun.sh/install | bash</code>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <code className="font-semibold">SQLite 3</code>
+                    <p className="text-muted-foreground mt-1">Base de données (inclus dans Bun)</p>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <code className="font-semibold">API Key (optionnel)</code>
+                    <p className="text-muted-foreground mt-1">Anthropic/Mistral/OpenAI pour compression LLM</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Étape 1: Clone et Install */}
               <div className="flex gap-3">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-xs">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm">
                   1
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-sm">Installer et démarrer</h4>
-                  <code className="block bg-muted p-2 rounded text-xs mt-1">cd nexus && bun install</code>
-                  <code className="block bg-muted p-2 rounded text-xs">bun run --filter ./apps/api src/index.ts</code>
+                  <h4 className="font-semibold">Cloner et installer les dépendances</h4>
+                  <pre className="bg-muted p-3 rounded text-xs mt-2 overflow-x-auto">
+{`# Cloner le repo
+git clone https://github.com/your-org/nexus.git
+cd nexus
+
+# Installer toutes les dépendances (monorepo)
+bun install
+
+# Build tous les packages
+bun run build`}
+                  </pre>
                 </div>
               </div>
+
+              {/* Étape 2: Configuration env */}
               <div className="flex gap-3">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-xs">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm">
                   2
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-sm">Configurer Claude Code</h4>
-                  <p className="text-xs text-muted-foreground mb-1">Ajoutez à votre <code className="bg-muted px-1 rounded">~/.claude.json</code> (ou <code className="bg-muted px-1 rounded">~/.claude-glm.json</code> pour GLM)</p>
-                  <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">
+                  <h4 className="font-semibold">Configurer l'environnement (optionnel)</h4>
+                  <p className="text-xs text-muted-foreground mt-1">Créer <code className="bg-muted px-1 rounded">apps/api/.env</code> pour activer les features avancées</p>
+                  <pre className="bg-muted p-3 rounded text-xs mt-2 overflow-x-auto">
+{`# apps/api/.env
+PORT=3001
+
+# Compression LLM (un seul suffit, priorité: Anthropic > Mistral > OpenAI)
+ANTHROPIC_API_KEY=sk-ant-...
+# ou
+MISTRAL_API_KEY=...
+# ou
+OPENAI_API_KEY=sk-...
+
+# Semantic Search (optionnel, même clé que compression)
+EMBEDDING_PROVIDER=mistral  # mistral | openai | ollama`}
+                  </pre>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    <strong>Sans API key :</strong> la compression algorithmique (30:1) est utilisée automatiquement
+                  </p>
+                </div>
+              </div>
+
+              {/* Étape 3: Démarrer l'API */}
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                  3
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold">Démarrer le serveur API</h4>
+                  <pre className="bg-muted p-3 rounded text-xs mt-2 overflow-x-auto">
+{`# Depuis la racine du projet
+cd apps/api && bun run src/index.ts
+
+# Vérifier que ça fonctionne
+curl http://localhost:3001/health
+# Réponse: { "status": "ok", "version": "0.2.0" }`}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Étape 4: Configurer Claude Code */}
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                  4
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold">Configurer Claude Code MCP</h4>
+                  <p className="text-xs text-muted-foreground mt-1">Ajouter la config MCP dans <code className="bg-muted px-1 rounded">~/.claude.json</code></p>
+                  <pre className="bg-muted p-3 rounded text-xs mt-2 overflow-x-auto">
 {`{
   "mcpServers": {
     "nexus": {
       "command": "bun",
-      "args": ["run", "./apps/mcp-server/src/index.ts"],
-      "env": { "NEXUS_API_URL": "http://localhost:3001" }
+      "args": ["run", "/chemin/absolu/vers/nexus/apps/mcp-server/src/index.ts"],
+      "env": {
+        "NEXUS_API_URL": "http://localhost:3001"
+      }
     }
+  }
+}`}
+                  </pre>
+                  <p className="text-xs text-orange-500 mt-2 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Remplacer <code className="bg-muted px-1 rounded">/chemin/absolu/vers/nexus</code> par le vrai chemin
+                  </p>
+                </div>
+              </div>
+
+              {/* Étape 5: Configurer les Hooks (optionnel) */}
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                  5
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold">Configurer les Hooks (optionnel mais recommandé)</h4>
+                  <p className="text-xs text-muted-foreground mt-1">Les hooks permettent la capture automatique et la compression</p>
+                  <pre className="bg-muted p-3 rounded text-xs mt-2 overflow-x-auto">
+{`# Ajouter à ~/.claude.json
+{
+  "hooks": {
+    "SessionStart": [{
+      "matcher": "",
+      "command": "bun run /chemin/nexus/apps/hooks/dist/session-start.js"
+    }],
+    "PostToolUse": [{
+      "matcher": "",
+      "command": "bun run /chemin/nexus/apps/hooks/dist/post-tool-use.js"
+    }],
+    "SessionEnd": [{
+      "matcher": "",
+      "command": "bun run /chemin/nexus/apps/hooks/dist/session-end.js"
+    }]
   }
 }`}
                   </pre>
                 </div>
               </div>
+
+              {/* Étape 6: Vérification */}
               <div className="flex gap-3">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-xs">
-                  3
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500 text-white font-bold text-sm">
+                  ✓
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-sm">Utiliser les tools</h4>
-                  <code className="block bg-muted p-2 rounded text-xs mt-1">{`nexus_code_search({ query: "login" })`}</code>
-                  <code className="block bg-muted p-2 rounded text-xs">{`nexus_memory_recall({ query: "auth" })`}</code>
+                  <h4 className="font-semibold">Vérifier l'installation</h4>
+                  <pre className="bg-muted p-3 rounded text-xs mt-2 overflow-x-auto">
+{`# Dans Claude Code, tester les outils MCP
+> nexus_code({ action: "stats" })
+# Réponse: Files:0|Chunks:0|Emb:0
+
+> nexus_memory({ action: "recall" })
+# Réponse: No memories
+
+# Créer une première mémoire de test
+> nexus_memory({ action: "upsert", type: "note", title: "Test installation" })
+# Réponse: Created:1`}
+                  </pre>
                 </div>
               </div>
+
+              {/* Exemples d'utilisation */}
+              <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold text-sm flex items-center gap-2 mb-3">
+                  <Lightbulb className="h-4 w-4 text-yellow-500" />
+                  Exemples d'utilisation réels
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <div className="font-semibold mb-2">Recherche de code</div>
+                    <pre className="bg-muted p-2 rounded overflow-x-auto">
+{`nexus_code({
+  action: "search",
+  query: "authentication",
+  mode: "hybrid",
+  limit: 5
+})`}
+                    </pre>
+                    <p className="text-muted-foreground mt-2">Retourne les 5 chunks les plus pertinents</p>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <div className="font-semibold mb-2">Créer une mémoire de décision</div>
+                    <pre className="bg-muted p-2 rounded overflow-x-auto">
+{`nexus_memory({
+  action: "upsert",
+  type: "decision",
+  title: "JWT pour auth",
+  narrative: "Choix de JWT...",
+  tags: ["auth", "security"]
+})`}
+                    </pre>
+                    <p className="text-muted-foreground mt-2">Crée une mémoire réutilisable</p>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <div className="font-semibold mb-2">Rappeler des patterns</div>
+                    <pre className="bg-muted p-2 rounded overflow-x-auto">
+{`nexus_learn({
+  action: "recall",
+  query: "React component",
+  lang: "typescript"
+})`}
+                    </pre>
+                    <p className="text-muted-foreground mt-2">Retourne max 3 patterns applicables</p>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <div className="font-semibold mb-2">Appliquer un pattern</div>
+                    <pre className="bg-muted p-2 rounded overflow-x-auto">
+{`nexus_learn({
+  action: "apply",
+  patternId: 1,
+  variables: { ComponentName: "UserCard" },
+  mode: "dry-run"
+})`}
+                    </pre>
+                    <p className="text-muted-foreground mt-2">Preview avant écriture</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </HelpCard>
+
+          {/* Quick Start (version courte) */}
+          <HelpCard
+            id="quick-start"
+            icon={Zap}
+            iconColor="bg-yellow-500/10 text-yellow-500"
+            title="Quick Start"
+            subtitle="TL;DR en 30 secondes"
+          >
+            <div className="space-y-3 text-xs">
+              <pre className="bg-muted p-3 rounded overflow-x-auto">
+{`# 1. Install
+git clone ... && cd nexus && bun install
+
+# 2. Start API
+cd apps/api && bun run src/index.ts
+
+# 3. Add to ~/.claude.json
+{
+  "mcpServers": {
+    "nexus": {
+      "command": "bun",
+      "args": ["run", "/path/to/nexus/apps/mcp-server/src/index.ts"],
+      "env": { "NEXUS_API_URL": "http://localhost:3001" }
+    }
+  }
+}
+
+# 4. Use in Claude Code
+nexus_code({ action: "stats" })`}
+              </pre>
             </div>
           </HelpCard>
 

@@ -8,6 +8,7 @@ import { Toaster } from 'sonner'
 import { useState } from 'react'
 import { DebugPanel, DebugToggle } from '@/components/debug-panel'
 import { useNexusStore } from '@/stores/nexusStore'
+import { RefreshProvider } from '@/contexts/refresh-context'
 
 import appCss from '../styles.css?url'
 
@@ -74,7 +75,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script src="/theme-init.js" />
       </head>
       <body>
-        {children}
+        <RefreshProvider>
+          {children}
+        </RefreshProvider>
         <Toaster position="bottom-right" richColors />
         <Scripts />
         {/* Debug Panel - only in development */}

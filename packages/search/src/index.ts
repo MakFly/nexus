@@ -5,6 +5,8 @@
  * - BM25 ranking
  * - Native integration (no external dependencies)
  * - Lightweight and fast
+ *
+ * Sprint 8: Added ChromaDB hybrid support for large datasets
  */
 
 // Re-export FTS5 functions
@@ -25,10 +27,35 @@ export {
 
 // Re-export ripgrep functions
 export {
-  ripgrepSearch,
-  type RipgrepOptions,
-  type RipgrepMatch,
+  rgSearch,
+  quickSearch,
+  searchByType,
+  formatMatch,
+  formatMatchList,
+  type RgSearchOptions,
+  type RgMatch,
+  type RgSearchResult,
 } from './ripgrep.js';
+
+// Re-export ChromaDB hybrid support (Sprint 8)
+export {
+  ChromaClient,
+  getChromaClient,
+  NEXUS_COLLECTIONS,
+  type ChromaConfig,
+  type ChromaCollectionConfig,
+  type ChromaEmbedding,
+  type ChromaQueryResult
+} from './chroma.js';
+
+export {
+  HybridRouter,
+  getHybridRouter,
+  shouldUseChroma,
+  type HybridRouterConfig,
+  type RouterResult,
+  type RouterEngine
+} from './hybrid-router.js';
 
 // ============================================
 // TYPES
@@ -189,7 +216,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
       content: h.content,
       symbol: h.symbol,
       kind: h.kind,
-      lang: null,
+      lang: undefined,
       score: h.score || 0,
     })),
     totalHits: hits.length,

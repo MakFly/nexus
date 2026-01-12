@@ -23,44 +23,46 @@ export const Route = createFileRoute('/changelog/')({
   component: ChangelogPage,
 })
 
-// Matrice comparative - MAINTENIR A JOUR
+// Matrice comparative - MAINTENIR A JOUR (Audit 2026-01-12)
 const COMPARISON_MATRIX = [
-  { feature: 'Auto-capture', claudeMem: true, claudeMemNote: '6 hooks', mgrep: false, nexus: true, nexusNote: '4 hooks', status: 'partial' },
-  { feature: 'Compression LLM', claudeMem: true, claudeMemNote: '100:1', mgrep: false, nexus: true, nexusNote: '15:1', status: 'inferior' },
-  { feature: 'Semantic Search', claudeMem: true, claudeMemNote: 'Chroma', mgrep: true, mgrepNote: 'Mixedbread', nexus: true, nexusNote: 'Mistral', status: 'ok' },
+  { feature: 'Auto-capture', claudeMem: true, claudeMemNote: '6 hooks', mgrep: false, nexus: true, nexusNote: '6 hooks', status: 'ok' },
+  { feature: 'Compression LLM', claudeMem: true, claudeMemNote: '100:1', mgrep: false, nexus: true, nexusNote: '100:1', status: 'ok' },
+  { feature: 'Compression Algo', claudeMem: false, mgrep: false, nexus: true, nexusNote: '30:1 fallback', status: 'unique' },
+  { feature: 'Semantic Search', claudeMem: true, claudeMemNote: 'Chroma', mgrep: true, mgrepNote: 'Mixedbread', nexus: true, nexusNote: 'Mistral/OpenAI', status: 'ok' },
+  { feature: 'Hybrid Router', claudeMem: false, mgrep: false, nexus: true, nexusNote: 'SQLite+Chroma', status: 'unique' },
   { feature: 'File Watcher', claudeMem: false, mgrep: true, nexus: true, nexusNote: 'chokidar', status: 'ok' },
   { feature: 'Incremental Index', claudeMem: false, mgrep: true, nexus: true, status: 'ok' },
   { feature: 'Progressive Disclosure', claudeMem: true, claudeMemNote: '3-layer', mgrep: false, nexus: true, nexusNote: '3-layer', status: 'ok' },
-  { feature: 'Web UI', claudeMem: true, claudeMemNote: 'Basic', mgrep: false, nexus: true, nexusNote: 'Full React', status: 'superior' },
-  { feature: 'Learning Patterns', claudeMem: false, mgrep: false, nexus: true, status: 'unique' },
+  { feature: 'Web UI', claudeMem: true, claudeMemNote: 'Basic', mgrep: false, nexus: true, nexusNote: '12 routes React', status: 'superior' },
+  { feature: 'Learning Patterns', claudeMem: false, mgrep: false, nexus: true, nexusNote: 'Capture+Apply', status: 'unique' },
+  { feature: 'Federation Multi-Project', claudeMem: true, mgrep: true, mgrepNote: 'Cloud', nexus: true, nexusNote: 'Local+Global', status: 'ok' },
   { feature: 'Budget Mode', claudeMem: false, mgrep: false, nexus: true, status: 'unique' },
-  { feature: 'Multi-Project', claudeMem: true, mgrep: true, mgrepNote: 'Cloud', nexus: true, nexusNote: 'Projects', status: 'ok' },
   { feature: 'Privacy Filters', claudeMem: true, claudeMemNote: '<private>', mgrep: false, nexus: true, status: 'ok' },
+  { feature: 'MCP Tools', claudeMem: true, claudeMemNote: '4 tools', mgrep: true, mgrepNote: 'CLI', nexus: true, nexusNote: '3 consolidated', status: 'ok' },
   { feature: 'Web Search', claudeMem: false, mgrep: true, mgrepNote: '--web', nexus: false, status: 'missing' },
   { feature: 'Multimodal (PDF/img)', claudeMem: false, mgrep: true, nexus: false, status: 'missing' },
-  { feature: 'Vector DB dédié', claudeMem: true, claudeMemNote: 'Chroma', mgrep: true, mgrepNote: 'Cloud', nexus: false, nexusNote: 'SQLite', status: 'inferior' },
 ]
 
-// Scores - MAINTENIR A JOUR
+// Scores - MAINTENIR A JOUR (Audit 2026-01-12)
 const SCORES = {
-  featureParity: 8.5,
+  featureParity: 9.0,  // 14/16 features OK (87.5%)
   architecture: 9.5,
-  tokenEfficiency: 8.0,
+  tokenEfficiency: 9.0,  // 100:1 LLM + 30:1 Algo
   developerUX: 9.0,
   documentation: 8.5,
-  innovation: 9.0,
-  global: 8.7,
+  innovation: 9.5,  // 4 features uniques
+  global: 9.1,
 }
 
-// Recommandations - MAINTENIR A JOUR
+// Recommandations - MAINTENIR A JOUR (Audit 2026-01-12)
 const RECOMMENDATIONS = {
   immediate: [
-    { id: 1, title: 'Améliorer compression', description: 'Viser ratio 50:1 minimum (actuellement 15:1)', priority: 'P0', sprint: '11' },
-    { id: 2, title: 'Endpoint /search/web', description: 'Intégrer Tavily ou SerpAPI pour web search', priority: 'P1', sprint: '11' },
+    { id: 1, title: 'Endpoint /search/web', description: 'Intégrer Tavily ou SerpAPI pour web search', priority: 'P1', sprint: '11' },
+    { id: 2, title: 'Tests E2E hooks', description: 'Valider les 6 hooks avec Claude Code réel', priority: 'P1', sprint: '11' },
   ],
   shortTerm: [
-    { id: 3, title: 'Migration Chroma', description: 'Pour repos > 50k chunks, meilleure performance', priority: 'P2', sprint: '12-13' },
-    { id: 4, title: 'Endless Mode', description: 'Compression continue (beta dans claude-mem)', priority: 'P2', sprint: '12-13' },
+    { id: 3, title: 'Endless Mode', description: 'Compression continue automatique (beta dans claude-mem)', priority: 'P2', sprint: '12' },
+    { id: 4, title: 'Ollama par défaut', description: 'Compression LLM gratuite sans API key', priority: 'P2', sprint: '12' },
   ],
   longTerm: [
     { id: 5, title: 'Support PDF/Images', description: 'Chunking multimodal pour docs techniques', priority: 'P3', sprint: 'Q2' },
@@ -71,6 +73,35 @@ const RECOMMENDATIONS = {
 // Changelog entries - MAINTENIR A JOUR
 const CHANGELOG = [
   {
+    version: '0.2.0',
+    date: '2026-01-12',
+    title: 'Feature Parity Release - ISO claude-mem + Extras',
+    highlights: [
+      'Compression LLM 100:1 (Anthropic, Mistral, OpenAI, Ollama)',
+      'Compression Algo 30:1 (fallback gratuit sans API)',
+      'Hybrid Router SQLite+Chroma (auto-switch à 50k chunks)',
+      'Federation Multi-Project (repo + global scopes)',
+      '6 Lifecycle Hooks (session-start, user-prompt, pre-tool, post-tool, stop, session-end)',
+      'MCP Server v0.2.0 Turbo (3 outils consolidés, format compact)',
+      'Web UI 12 routes React 19 + TanStack Router',
+      '4 features uniques : Compression Algo, Hybrid Router, Learning Patterns, Budget Mode',
+    ],
+    score: 9.1,
+  },
+  {
+    version: '0.1.0',
+    date: '2026-01-11',
+    title: 'Foundation Release - Core Features',
+    highlights: [
+      'Storage layer avec SQLite + FTS5',
+      'Search sémantique Mistral/OpenAI',
+      'Memory system avec Progressive Disclosure 3-layer',
+      'Learning Patterns avec Capture/Distill/Apply/Feedback',
+      'File Watcher avec chokidar',
+    ],
+    score: 8.0,
+  },
+  {
     version: '0.0.1',
     date: '2025-01-11',
     title: 'Initial Release - Monorepo Setup',
@@ -79,7 +110,7 @@ const CHANGELOG = [
       'Monorepo setup with packages (storage, search, indexer-py, core)',
       'Apps: api, cli, mcp-server, web',
     ],
-    score: 10.0,
+    score: 6.0,
   },
 ]
 

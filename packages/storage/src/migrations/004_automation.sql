@@ -1,14 +1,14 @@
--- Migration 004: Automation - Observations & Candidates
+-- Migration 004: Automation - Hook Observations & Candidates
 -- Adds tables for auto-capture feature (claude-mem parity)
--- Version: 1.0.0
+-- Version: 1.0.1
 -- Date: 2025-01-11
 
 -- ============================================================================
--- OBSERVATIONS TABLE
+-- HOOK_OBSERVATIONS TABLE (renamed from observations to avoid conflict)
 -- Stores raw observations from Claude Code hooks
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS observations (
+CREATE TABLE IF NOT EXISTS hook_observations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   session_id TEXT NOT NULL,
   hook_name TEXT NOT NULL,  -- 'sessionStart', 'postTool', 'sessionEnd'
@@ -19,31 +19,27 @@ CREATE TABLE IF NOT EXISTS observations (
 );
 
 -- Indexes for efficient queries
-CREATE INDEX IF NOT EXISTS idx_observations_session ON observations(session_id);
-CREATE INDEX IF NOT EXISTS idx_observations_processed ON observations(processed);
-CREATE INDEX IF NOT EXISTS idx_observations_hook_name ON observations(hook_name);
-CREATE INDEX IF NOT EXISTS idx_observations_timestamp ON observations(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_hook_observations_session ON hook_observations(session_id);
+CREATE INDEX IF NOT EXISTS idx_hook_observations_processed ON hook_observations(processed);
+CREATE INDEX IF NOT EXISTS idx_hook_observations_hook_name ON hook_observations(hook_name);
+CREATE INDEX IF NOT EXISTS idx_hook_observations_timestamp ON hook_observations(timestamp DESC);
 
 -- ============================================================================
--- CANDIDATES TABLE
--- Stores distilled memories pending review before promotion
+-- CANDIDATES TABLE EXTENSIONS
+-- Add columns for auto-capture feature (candidates already exists in 001)
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS candidates (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  session_id TEXT NOT NULL,
-  kind TEXT NOT NULL,        -- 'distilled', 'raw', 'diff', 'chunks', 'folder'
-  sources TEXT NOT NULL,     -- JSON array of observation IDs
-  status TEXT DEFAULT 'pending',  -- 'pending', 'distilled', 'rejected', 'promoted'
-  tags TEXT DEFAULT '[]',    -- JSON array of tag strings
-  metadata TEXT,             -- JSON: LLM response, confidence, etc.
-  created_at INTEGER DEFAULT (strftime('%s', 'now'))
-);
+-- Add session_id column if not exists
+ALTER TABLE candidates ADD COLUMN session_id TEXT;
 
--- Indexes
+-- Add metadata column if not exists
+ALTER TABLE candidates ADD COLUMN metadata TEXT;
+
+-- Update kind check constraint to include new types
+-- Note: SQLite doesn't support modifying constraints, so we just add the columns
+
+-- Indexes (only create session index, others exist from 001)
 CREATE INDEX IF NOT EXISTS idx_candidates_session ON candidates(session_id);
-CREATE INDEX IF NOT EXISTS idx_candidates_status ON candidates(status);
-CREATE INDEX IF NOT EXISTS idx_candidates_kind ON candidates(kind);
 
 -- ============================================================================
 -- INDEX FAILURES TABLE
@@ -65,7 +61,7 @@ CREATE INDEX IF NOT EXISTS idx_index_failures_path ON index_failures(file_path);
 -- VIEWS
 -- ============================================================================
 
--- View: Unprocessed observations ready for distillation
+-- View: Unprocessed hook observations ready for distillation
 CREATE VIEW IF NOT EXISTS v_pending_distillation AS
 SELECT
   session_id,
@@ -73,7 +69,7 @@ SELECT
   MIN(timestamp) as first_observation,
   MAX(timestamp) as last_observation,
   GROUP_CONCAT(DISTINCT hook_name) as hook_types
-FROM observations
+FROM hook_observations
 WHERE processed = FALSE
 GROUP BY session_id
 HAVING observation_count > 0;
@@ -85,7 +81,7 @@ SELECT
   session_id,
   kind,
   status,
-  json_array_length(sources) as source_count,
+  json_array_length(sources_json) as source_count,
   created_at
 FROM candidates
 WHERE status = 'pending'
@@ -100,10 +96,10 @@ CREATE TRIGGER IF NOT EXISTS trigger_candidate_mark_processed
 AFTER INSERT ON candidates
 WHEN NEW.kind IN ('distilled', 'raw')
 BEGIN
-  UPDATE observations
+  UPDATE hook_observations
   SET processed = TRUE
   WHERE session_id = NEW.session_id
-    AND id IN (SELECT value FROM json_each(NEW.sources));
+    AND id IN (SELECT value FROM json_each(NEW.sources_json));
 END;
 
 -- ============================================================================

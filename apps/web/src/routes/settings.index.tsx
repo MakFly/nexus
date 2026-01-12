@@ -167,27 +167,27 @@ function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {settings ? (
+            {settings?.database ? (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Files</p>
-                  <p className="text-2xl font-bold">{settings.database.files.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{(settings.database.files ?? 0).toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Chunks</p>
-                  <p className="text-2xl font-bold">{settings.database.chunks.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{(settings.database.chunks ?? 0).toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Memories</p>
-                  <p className="text-2xl font-bold">{settings.database.memories.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{(settings.database.memories ?? 0).toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Patterns</p>
-                  <p className="text-2xl font-bold">{settings.database.patterns.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{(settings.database.patterns ?? 0).toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Projects</p>
-                  <p className="text-2xl font-bold">{settings.database.projects.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{(settings.database.projects ?? 0).toLocaleString()}</p>
                 </div>
               </div>
             ) : (

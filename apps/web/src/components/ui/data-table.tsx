@@ -15,6 +15,7 @@ import {
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
+  Settings2Icon,
 } from 'lucide-react'
 import type {
   ColumnDef,
@@ -33,6 +34,14 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface DataTableProps<TData, TValue> {
   columns: Array<ColumnDef<TData, TValue>>
@@ -40,6 +49,7 @@ interface DataTableProps<TData, TValue> {
   searchKey?: string
   searchPlaceholder?: string
   pageSize?: number
+  showColumnToggle?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -48,6 +58,7 @@ export function DataTable<TData, TValue>({
   searchKey,
   searchPlaceholder = 'Search...',
   pageSize = 10,
+  showColumnToggle = false,
 }: DataTableProps<TData, TValue>) {
   // Use refs to persist state across re-renders from parent
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -96,18 +107,50 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {searchKey && (
-        <div className="flex items-center">
-          <Input
-            placeholder={searchPlaceholder}
-            value={
-              (table.getColumn(searchKey)?.getFilterValue() as string) ?? ''
-            }
-            onChange={(event) =>
-              table.getColumn(searchKey)?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+      {(searchKey || showColumnToggle) && (
+        <div className="flex items-center gap-2">
+          {searchKey && (
+            <Input
+              placeholder={searchPlaceholder}
+              value={
+                (table.getColumn(searchKey)?.getFilterValue() as string) ?? ''
+              }
+              onChange={(event) =>
+                table.getColumn(searchKey)?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+          )}
+          {showColumnToggle && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings2Icon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[150px]">
+                <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    )
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       )}
       <div className="rounded-md border">
