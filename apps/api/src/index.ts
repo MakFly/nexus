@@ -57,7 +57,6 @@ import { createContextRoutes } from './routes/context.js';
 import { createWatcherRoutes } from './routes/watcher.js';
 import { createSettingsRoutes } from './routes/settings.js';
 import { createSessionsRoutes } from './routes/sessions.js';
-import { createSessionsHistoryRoutes } from './routes/sessions-history.js';
 import { createBenchmarkRoutes } from './routes/benchmark.js';
 import { createStreamRoutes } from './routes/stream.js';
 
@@ -108,7 +107,6 @@ app.route('/context', createContextRoutes(getDb as any));
 app.route('/watcher', createWatcherRoutes(getDb as any));
 app.route('/settings', createSettingsRoutes(getDb as any));
 app.route('/sessions', createSessionsRoutes(getDb as any));
-app.route('/sessions/history', createSessionsHistoryRoutes(getDb as any));
 app.route('/benchmark', createBenchmarkRoutes(getDb as any));
 app.route('/stream', createStreamRoutes(getDb as any));
 
@@ -521,11 +519,6 @@ console.log(`  GET  /watcher/status   - Get watcher status`);
 console.log(`  GET  /watcher/queue    - Get queued files`);
 console.log(`  GET  /sessions         - CLI sessions (Claude, Codex, Gemini)`);
 console.log(`  GET  /sessions/summary - Sessions summary`);
-console.log(`  GET  /sessions/history/daily  - Daily calendar view`);
-console.log(`  GET  /sessions/history/list   - Paginated history`);
-console.log(`  GET  /sessions/history/stats  - Usage statistics`);
-console.log(`  POST /sessions/history/import - Import from JSONL`);
-console.log(`  POST /sessions/history/record - Record session end`);
 console.log(`[API] Semantic search: ${embeddingsInitialized ? 'enabled (Mistral)' : 'disabled (set MISTRAL_API_KEY)'}`);
 console.log(`[API] Auto-capture: enabled (hooks compatible)`);
 console.log(`[API] File watcher: enabled (chokidar)`);

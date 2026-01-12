@@ -21,16 +21,13 @@ import {
 import {
   BarChart3Icon,
   BrainIcon,
-  CalendarIcon,
   LayoutDashboardIcon,
   SearchIcon,
   SparklesIcon,
   FolderCodeIcon,
   HelpCircleIcon,
   SettingsIcon,
-  GitCompareArrowsIcon,
   MonitorIcon,
-  FlaskConicalIcon,
 } from "lucide-react"
 import { useNexusStore } from "@/stores/nexusStore"
 
@@ -78,19 +75,9 @@ const data = {
       icon: MonitorIcon,
     },
     {
-      name: "History",
-      url: "/sessions-history",
-      icon: CalendarIcon,
-    },
-    {
       name: "Stats",
       url: "/stats",
       icon: BarChart3Icon,
-    },
-    {
-      name: "Playground",
-      url: "/playground",
-      icon: FlaskConicalIcon,
     },
   ],
   footer: [
@@ -103,11 +90,6 @@ const data = {
       name: "Help",
       url: "/help",
       icon: HelpCircleIcon,
-    },
-    {
-      name: "Changelog",
-      url: "/changelog",
-      icon: GitCompareArrowsIcon,
     },
   ],
 }

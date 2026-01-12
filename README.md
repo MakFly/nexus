@@ -2,86 +2,86 @@
 
 > **Memory-Powered Development System for Claude Code**
 
-Nexus remplace `claude-mem` + `mgrep` avec une solution unifiée : recherche de code, mémoires contextuelles, et patterns réutilisables via MCP.
+Nexus replaces `claude-mem` + `mgrep` with a unified solution: code search, contextual memories, and reusable patterns via MCP.
 
-## Pourquoi Nexus ?
+## Why Nexus?
 
-| Problème | Solution Nexus |
-|----------|----------------|
-| Tokens gaspillés (tout le codebase chargé) | **Progressive Disclosure** : 3 couches pour 10-20x économie |
-| Contexte perdu entre sessions | **Memory System** : décisions, préférences, découvertes persistées |
-| Patterns de code répétés | **Learning System** : capture et réapplique les templates |
+| Problem | Nexus Solution |
+|---------|----------------|
+| Wasted tokens (entire codebase loaded) | **Progressive Disclosure**: 3 layers for 10-20x savings |
+| Context lost between sessions | **Memory System**: decisions, preferences, discoveries persisted |
+| Repeated code patterns | **Learning System**: captures and reapplies templates |
 
 ## Installation
 
-### Prérequis
+### Prerequisites
 
 - Node.js >= 22.0.0
 - Bun >= 1.0.0
-- Python 3 (pour l'indexeur)
+- Python 3 (for indexer)
 
-### Installation Automatique
+### Automated Installation
 
 ```bash
-git clone https://github.com/votre-org/nexus.git
+git clone https://github.com/your-org/nexus.git
 cd nexus
 ./install.sh
 ```
 
-Le script :
-1. Vérifie les prérequis
-2. Installe les dépendances (`bun install`)
-3. Build le projet (`bun run build`)
-4. Configure les hooks Claude Code
-5. Configure le serveur MCP
-6. Installe l'API comme service système
-7. Vérifie que tout fonctionne
+The script:
+1. Checks prerequisites
+2. Installs dependencies (`bun install`)
+3. Builds the project (`bun run build`)
+4. Configures Claude Code hooks
+5. Configures MCP server
+6. Installs API as system service
+7. Verifies everything works
 
-### Options d'Installation
+### Installation Options
 
 ```bash
-./install.sh              # Installation complète
-./install.sh --no-service # Sans service système (API manuelle)
-./install.sh --uninstall  # Désinstallation complète
-./install.sh --help       # Aide
+./install.sh              # Full installation
+./install.sh --no-service # Without system service (manual API)
+./install.sh --uninstall  # Complete uninstall
+./install.sh --help       # Help
 ```
 
-### Indexer votre Codebase
+### Index Your Codebase
 
 ```bash
 python3 packages/indexer-py/main.py index .
 ```
 
-## Utilisation avec Claude Code
+## Usage with Claude Code
 
-Après installation, Nexus est automatiquement disponible via MCP.
+After installation, Nexus is automatically available via MCP.
 
-### Outils MCP Disponibles
+### Available MCP Tools
 
 | Tool | Description | Tokens |
 |------|-------------|--------|
-| `nexus_code` | Recherche code (keyword/semantic/hybrid) | ~50/hit |
-| `nexus_memory` | Mémoires (recall/get/upsert) | ~50-500/item |
+| `nexus_code` | Code search (keyword/semantic/hybrid) | ~50/hit |
+| `nexus_memory` | Memories (recall/get/upsert) | ~50-500/item |
 | `nexus_learn` | Patterns (recall/templates/apply) | ~100-2000 |
 
-### Progressive Disclosure (3 Couches)
+### Progressive Disclosure (3 Layers)
 
 ```
-1. RECALL    → Index compact avec IDs        (~50 tokens/item)
-2. TIMELINE  → Contexte chronologique        (optionnel)
-3. GET       → Contenu complet filtré        (~500 tokens/item)
+1. RECALL    → Compact index with IDs          (~50 tokens/item)
+2. TIMELINE  → Chronological context           (optional)
+3. GET       → Full filtered content           (~500 tokens/item)
 ```
 
-**Exemple :**
+**Example:**
 
 ```typescript
-// Étape 1: Rappeler les mémoires pertinentes
+// Step 1: Recall relevant memories
 nexus_memory({ action: "recall", query: "auth", limit: 5 })
-// → [{id: 42, summary: "JWT choisi pour auth", type: "decision"}]
+// → [{id: 42, summary: "JWT chosen for auth", type: "decision"}]
 
-// Étape 2: Contenu complet si nécessaire
+// Step 2: Full content if needed
 nexus_memory({ action: "get", ids: [42] })
-// → Narrative complète avec facts/tags
+// → Complete narrative with facts/tags
 ```
 
 ## Architecture
@@ -90,84 +90,84 @@ nexus_memory({ action: "get", ids: [42] })
 nexus/
 ├── apps/
 │   ├── api/           # REST API (Hono + SQLite) - Port 3001
-│   ├── mcp-server/    # Serveur MCP (stdio)
-│   ├── hooks/         # Hooks Claude Code
-│   └── web/           # UI Web (React + shadcn/ui)
+│   ├── mcp-server/    # MCP Server (stdio)
+│   ├── hooks/         # Claude Code Hooks
+│   └── web/           # Web UI (React + shadcn/ui)
 ├── packages/
-│   ├── core/          # Types partagés
+│   ├── core/          # Shared types
 │   ├── storage/       # SQLite + migrations
 │   ├── search/        # FTS5 + embeddings
-│   └── indexer-py/    # Indexeur Python
-├── scripts/           # Scripts d'installation
+│   └── indexer-py/    # Python indexer
+├── scripts/           # Installation scripts
 └── docs/              # Documentation
 ```
 
 ## Configuration
 
-### Variables d'Environnement (optionnel)
+### Environment Variables (optional)
 
 ```bash
 # apps/api/.env
 PORT=3001
-MISTRAL_API_KEY=votre_clé    # Pour recherche sémantique
-EMBEDDING_PROVIDER=mistral   # ou 'openai' | 'ollama'
+MISTRAL_API_KEY=your_key      # For semantic search
+EMBEDDING_PROVIDER=mistral     # or 'openai' | 'ollama'
 ```
 
-### Fichiers de Configuration Claude
+### Claude Configuration Files
 
 - `~/.claude/settings.json` - Hooks
-- `~/.claude.json` - Serveurs MCP
+- `~/.claude.json` - MCP servers
 
-## Commandes
+## Commands
 
 ```bash
 # Build
-bun run build              # Build tout
-bun run build:packages     # Build packages seulement
-bun run build:apps         # Build apps seulement
+bun run build              # Build everything
+bun run build:packages     # Build packages only
+bun run build:apps         # Build apps only
 
 # Test
-bun test                   # Tous les tests
+bun test                   # All tests
 
-# Développement
+# Development
 cd apps/api && bun run src/index.ts    # API server
-cd apps/web && bun run dev             # UI Web (dev)
+cd apps/web && bun run dev             # Web UI (dev)
 
-# Base de données
-python3 packages/indexer-py/main.py index .    # Indexer
+# Database
+python3 packages/indexer-py/main.py index .    # Index
 python3 packages/indexer-py/main.py status     # Stats
 ./scripts/reset-db.sh                          # Reset
 ```
 
 ## Documentation
 
-- [API Reference](docs/API.md) - Endpoints REST
-- [MCP Usage](docs/MCP_USAGE.md) - Guide MCP détaillé
-- [CLAUDE.md](CLAUDE.md) - Instructions pour Claude Code
+- [API Reference](docs/API.md) - REST endpoints
+- [MCP Usage](docs/MCP_USAGE.md) - Detailed MCP guide
+- [CLAUDE.md](CLAUDE.md) - Instructions for Claude Code
 
-## Types de Mémoires
+## Memory Types
 
 | Type | Usage |
 |------|-------|
-| `decision` | Choix architecturaux |
-| `preference` | Préférences utilisateur |
-| `fact` | Informations factuelles |
-| `discovery` | Découvertes techniques |
-| `bugfix` | Bugs résolus |
-| `feature` | Features implémentées |
-| `refactor` | Refactorings effectués |
+| `decision` | Architectural choices |
+| `preference` | User preferences |
+| `fact` | Factual information |
+| `discovery` | Technical discoveries |
+| `bugfix` | Resolved bugs |
+| `feature` | Implemented features |
+| `refactor` | Refactorings done |
 
 ## Scopes
 
-| Scope | Portée |
-|-------|--------|
-| `repo` | Repository entier |
-| `branch` | Branche spécifique |
+| Scope | Range |
+|-------|-------|
+| `repo` | Entire repository |
+| `branch` | Specific branch |
 | `ticket` | Ticket/Issue |
-| `feature` | Feature spécifique |
-| `global` | Tous les projets |
+| `feature` | Specific feature |
+| `global` | All projects |
 
-## Licence
+## License
 
 MIT
 

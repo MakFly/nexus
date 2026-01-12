@@ -278,6 +278,9 @@ function SessionsPage() {
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
               <MonitorIcon className="h-8 w-8" />
               Sessions CLI
+              <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                WIP
+              </Badge>
             </h1>
             <p className="text-muted-foreground">
               Monitor active AI coding agents across Claude Code, Codex, and Gemini
